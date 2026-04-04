@@ -31,6 +31,7 @@ db.exec(`
     body_water_pct        REAL,
     metabolic_age         INTEGER,
     bmr_kcal              INTEGER,
+    physique_rating       INTEGER,
 
     -- Body composition
     muscle_mass_kg        REAL,
@@ -76,7 +77,7 @@ const stmtGetById = db.prepare(`SELECT * FROM entries WHERE id = ?`);
 const stmtInsert = db.prepare(`
   INSERT INTO entries (
     user_id, user_name, date,
-    weight_kg, bmi, body_fat_pct, body_water_pct, metabolic_age, bmr_kcal,
+    weight_kg, bmi, body_fat_pct, body_water_pct, metabolic_age, bmr_kcal, physique_rating,
     muscle_mass_kg, bone_mass_kg, visceral_fat,
     left_arm_muscle_kg, left_arm_fat_pct,
     right_arm_muscle_kg, right_arm_fat_pct,
@@ -85,7 +86,7 @@ const stmtInsert = db.prepare(`
     trunk_muscle_kg, trunk_fat_pct
   ) VALUES (
     @user_id, @user_name, @date,
-    @weight_kg, @bmi, @body_fat_pct, @body_water_pct, @metabolic_age, @bmr_kcal,
+    @weight_kg, @bmi, @body_fat_pct, @body_water_pct, @metabolic_age, @bmr_kcal, @physique_rating,
     @muscle_mass_kg, @bone_mass_kg, @visceral_fat,
     @left_arm_muscle_kg, @left_arm_fat_pct,
     @right_arm_muscle_kg, @right_arm_fat_pct,
@@ -100,6 +101,7 @@ const stmtUpdate = db.prepare(`
     date = @date,
     weight_kg = @weight_kg, bmi = @bmi, body_fat_pct = @body_fat_pct,
     body_water_pct = @body_water_pct, metabolic_age = @metabolic_age, bmr_kcal = @bmr_kcal,
+    physique_rating = @physique_rating,
     muscle_mass_kg = @muscle_mass_kg, bone_mass_kg = @bone_mass_kg, visceral_fat = @visceral_fat,
     left_arm_muscle_kg = @left_arm_muscle_kg, left_arm_fat_pct = @left_arm_fat_pct,
     right_arm_muscle_kg = @right_arm_muscle_kg, right_arm_fat_pct = @right_arm_fat_pct,

@@ -11,7 +11,7 @@ const router = Router();
 
 const NUMERIC_FIELDS = [
   'weight_kg', 'bmi', 'body_fat_pct', 'body_water_pct',
-  'metabolic_age', 'bmr_kcal',
+  'metabolic_age', 'bmr_kcal', 'physique_rating',
   'muscle_mass_kg', 'bone_mass_kg', 'visceral_fat',
   'left_arm_muscle_kg', 'left_arm_fat_pct',
   'right_arm_muscle_kg', 'right_arm_fat_pct',

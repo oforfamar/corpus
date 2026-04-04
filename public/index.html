@@ -58,6 +58,7 @@
         <div class="form-group"><label>BMI <span id="f_bmi_note" style="font-style:italic;font-size:.7rem"></span></label><input type="number" step="0.1" id="f_bmi" /></div>
         <div class="form-group"><label>Metabolic age</label><input type="number" step="1" id="f_metabolic_age" /></div>
         <div class="form-group"><label>BMR (kcal)</label><input type="number" step="1" id="f_bmr_kcal" /></div>
+        <div class="form-group"><label>Physique rating (1–9)</label><input type="number" step="1" min="1" max="9" id="f_physique_rating" /></div>
       </div>
 
       <div class="form-section-title">Body composition</div>
@@ -70,16 +71,16 @@
       </div>
 
       <div class="form-section-title">Limb breakdown</div>
-      <div class="form-grid">
+      <div class="form-grid" style="grid-template-columns: repeat(5, 1fr);">
         <div class="form-group"><label>Left arm muscle (kg)</label><input type="number" step="0.01" id="f_left_arm_muscle_kg" /></div>
-        <div class="form-group"><label>Left arm fat (%)</label><input type="number" step="0.1" id="f_left_arm_fat_pct" /></div>
         <div class="form-group"><label>Right arm muscle (kg)</label><input type="number" step="0.01" id="f_right_arm_muscle_kg" /></div>
-        <div class="form-group"><label>Right arm fat (%)</label><input type="number" step="0.1" id="f_right_arm_fat_pct" /></div>
         <div class="form-group"><label>Left leg muscle (kg)</label><input type="number" step="0.01" id="f_left_leg_muscle_kg" /></div>
-        <div class="form-group"><label>Left leg fat (%)</label><input type="number" step="0.1" id="f_left_leg_fat_pct" /></div>
         <div class="form-group"><label>Right leg muscle (kg)</label><input type="number" step="0.01" id="f_right_leg_muscle_kg" /></div>
-        <div class="form-group"><label>Right leg fat (%)</label><input type="number" step="0.1" id="f_right_leg_fat_pct" /></div>
         <div class="form-group"><label>Trunk muscle (kg)</label><input type="number" step="0.01" id="f_trunk_muscle_kg" /></div>
+        <div class="form-group"><label>Left arm fat (%)</label><input type="number" step="0.1" id="f_left_arm_fat_pct" /></div>
+        <div class="form-group"><label>Right arm fat (%)</label><input type="number" step="0.1" id="f_right_arm_fat_pct" /></div>
+        <div class="form-group"><label>Left leg fat (%)</label><input type="number" step="0.1" id="f_left_leg_fat_pct" /></div>
+        <div class="form-group"><label>Right leg fat (%)</label><input type="number" step="0.1" id="f_right_leg_fat_pct" /></div>
         <div class="form-group"><label>Trunk fat (%)</label><input type="number" step="0.1" id="f_trunk_fat_pct" /></div>
       </div>
 
@@ -117,11 +118,11 @@
           <tr>
             <th>Date</th><th>Profile</th><th>Weight</th><th>BMI</th>
             <th>Fat %</th><th>Water %</th><th>Muscle (kg)</th><th>Bone (kg)</th>
-            <th>Visceral fat</th><th>Met. age</th><th>BMR</th><th></th>
+            <th>Visceral fat</th><th>Met. age</th><th>BMR</th><th>Physique</th><th></th>
           </tr>
         </thead>
         <tbody id="tableBody">
-          <tr><td colspan="12"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>
+          <tr><td colspan="13"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>
         </tbody>
       </table>
     </div>
@@ -146,6 +147,7 @@
         <div class="form-group"><label>BMI <span id="e_bmi_note" style="font-style:italic;font-size:.7rem"></span></label><input type="number" step="0.1" id="e_bmi" /></div>
         <div class="form-group"><label>Metabolic age</label><input type="number" step="1" id="e_metabolic_age" /></div>
         <div class="form-group"><label>BMR (kcal)</label><input type="number" step="1" id="e_bmr_kcal" /></div>
+        <div class="form-group"><label>Physique rating (1–9)</label><input type="number" step="1" min="1" max="9" id="e_physique_rating" /></div>
       </div>
 
       <div class="form-section-title">Body composition</div>
@@ -158,16 +160,16 @@
       </div>
 
       <div class="form-section-title">Limb breakdown</div>
-      <div class="form-grid">
+      <div class="form-grid" style="grid-template-columns: repeat(5, 1fr);">
         <div class="form-group"><label>Left arm muscle (kg)</label><input type="number" step="0.01" id="e_left_arm_muscle_kg" /></div>
-        <div class="form-group"><label>Left arm fat (%)</label><input type="number" step="0.1" id="e_left_arm_fat_pct" /></div>
         <div class="form-group"><label>Right arm muscle (kg)</label><input type="number" step="0.01" id="e_right_arm_muscle_kg" /></div>
-        <div class="form-group"><label>Right arm fat (%)</label><input type="number" step="0.1" id="e_right_arm_fat_pct" /></div>
         <div class="form-group"><label>Left leg muscle (kg)</label><input type="number" step="0.01" id="e_left_leg_muscle_kg" /></div>
-        <div class="form-group"><label>Left leg fat (%)</label><input type="number" step="0.1" id="e_left_leg_fat_pct" /></div>
         <div class="form-group"><label>Right leg muscle (kg)</label><input type="number" step="0.01" id="e_right_leg_muscle_kg" /></div>
-        <div class="form-group"><label>Right leg fat (%)</label><input type="number" step="0.1" id="e_right_leg_fat_pct" /></div>
         <div class="form-group"><label>Trunk muscle (kg)</label><input type="number" step="0.01" id="e_trunk_muscle_kg" /></div>
+        <div class="form-group"><label>Left arm fat (%)</label><input type="number" step="0.1" id="e_left_arm_fat_pct" /></div>
+        <div class="form-group"><label>Right arm fat (%)</label><input type="number" step="0.1" id="e_right_arm_fat_pct" /></div>
+        <div class="form-group"><label>Left leg fat (%)</label><input type="number" step="0.1" id="e_left_leg_fat_pct" /></div>
+        <div class="form-group"><label>Right leg fat (%)</label><input type="number" step="0.1" id="e_right_leg_fat_pct" /></div>
         <div class="form-group"><label>Trunk fat (%)</label><input type="number" step="0.1" id="e_trunk_fat_pct" /></div>
       </div>
 

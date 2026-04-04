@@ -67,8 +67,8 @@ function onFilterChange() { loadData(); }
 
 // ── Auth ───────────────────────────────────────────────────────────────────
 async function logout() {
-  await fetch('/api/auth/sign-out', { method: 'POST' });
-  window.location.href = '/api/auth/sign-in/social?providerId=authelia&callbackURL=/';
+  await fetch('/api/logout', { method: 'POST' });
+  window.location.href = '/';
 }
 
 // ── Profile modal ──────────────────────────────────────────────────────────
@@ -196,6 +196,22 @@ function mifflinBmr(weightKg, heightCm, age, sex) {
   return sex === 'male' ? base + 5 : base - 161;
 }
 
+// Physique rating 1–9 (Tanita/Omron scale)
+const PHYSIQUE_LABELS = {
+  1: { label: 'Hidden obese',      cls: 'bad'     },
+  2: { label: 'Obese',             cls: 'bad'     },
+  3: { label: 'Overfat',           cls: 'bad'     },
+  4: { label: 'High fat + muscle', cls: 'warn'    },
+  5: { label: 'Standard',          cls: 'neutral' },
+  6: { label: 'Standard + muscle', cls: 'neutral' },
+  7: { label: 'Thin',              cls: 'warn'    },
+  8: { label: 'Thin + muscle',     cls: 'good'    },
+  9: { label: 'Very muscular',     cls: 'good'    },
+};
+function physiqueLabel(rating) {
+  return PHYSIQUE_LABELS[rating] ?? { label: 'Unknown', cls: 'neutral' };
+}
+
 // ── Stats row ──────────────────────────────────────────────────────────────
 function renderStats() {
   const statsRow      = document.getElementById('statsRow');
@@ -302,6 +318,17 @@ function renderStats() {
       </div>`);
   }
 
+  // 6. Physique rating
+  if (last.physique_rating != null) {
+    const p = physiqueLabel(last.physique_rating);
+    cards.push(`
+      <div class="stat-card">
+        <div class="stat-label">Physique</div>
+        <div class="stat-value ${p.cls}">${last.physique_rating} <small style="font-size:.9rem;font-weight:400">/ 9</small></div>
+        <div class="stat-sub"><b>${p.label}</b></div>
+      </div>`);
+  }
+
   if (cards.length) {
     statsRow.innerHTML = cards.join('');
     statsRow.classList.remove('hidden');
@@ -323,7 +350,7 @@ function toggleForm() {
 }
 
 const FIELDS = [
-  'weight_kg','bmi','metabolic_age','bmr_kcal',
+  'weight_kg','bmi','metabolic_age','bmr_kcal','physique_rating',
   'body_fat_pct','body_water_pct','muscle_mass_kg','bone_mass_kg','visceral_fat',
   'left_arm_muscle_kg','left_arm_fat_pct','right_arm_muscle_kg','right_arm_fat_pct',
   'left_leg_muscle_kg','left_leg_fat_pct','right_leg_muscle_kg','right_leg_fat_pct',
@@ -417,6 +444,7 @@ const LABELS = {
   body_fat_pct: 'Body fat (%)', body_water_pct: 'Body water (%)',
   muscle_mass_kg: 'Muscle (kg)', bone_mass_kg: 'Bone (kg)',
   visceral_fat: 'Visceral fat', metabolic_age: 'Metabolic age', bmr_kcal: 'BMR (kcal)',
+  physique_rating: 'Physique rating',
   left_arm_muscle_kg: 'L arm muscle', right_arm_muscle_kg: 'R arm muscle',
   left_leg_muscle_kg: 'L leg muscle', right_leg_muscle_kg: 'R leg muscle',
   trunk_muscle_kg: 'Trunk muscle',
@@ -593,7 +621,7 @@ function renderCharts() {
   renderLegend('legend_fat_water', fLegend);
 
   initOrUpdateChart('chart_muscle_bone', makeDatasetsMulti(['muscle_mass_kg','bone_mass_kg'], e), 'kg');
-  initOrUpdateChart('chart_misc',        makeDatasetsMulti(['visceral_fat','metabolic_age','bmr_kcal'], e));
+  initOrUpdateChart('chart_misc', makeDatasetsMulti(['visceral_fat','metabolic_age','bmr_kcal','physique_rating'], e));
   initOrUpdateChart('chart_limb_muscle', makeDatasetsMulti([
     'left_arm_muscle_kg','right_arm_muscle_kg','left_leg_muscle_kg','right_leg_muscle_kg','trunk_muscle_kg',
   ], e), 'kg');
@@ -608,7 +636,7 @@ function fmt(v, decimals = 1) { return v == null ? '—' : Number(v).toFixed(dec
 function renderTable() {
   const tbody = document.getElementById('tableBody');
   if (!allEntries.length) {
-    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>`;
     return;
   }
   const sorted = [...allEntries].sort((a, b) => b.date.localeCompare(a.date));
@@ -622,10 +650,11 @@ function renderTable() {
       <td>${fmt(e.body_fat_pct)}%</td>
       <td>${fmt(e.body_water_pct)}%</td>
       <td>${fmt(e.muscle_mass_kg)} kg</td>
-      <td>${fmt(e.bone_mass_kg, 2)} kg</td>
+      <td>${fmt(e.bone_mass_kg)} kg</td>
       <td>${fmt(e.visceral_fat)}</td>
       <td>${fmt(e.metabolic_age, 0)}</td>
       <td>${fmt(e.bmr_kcal, 0)}</td>
+      <td>${e.physique_rating != null ? e.physique_rating : '—'}</td>
       <td><div class="td-actions">${isMe ? `
         <button class="btn-sm btn-edit" onclick='openEditModal(${JSON.stringify(e)})'>Edit</button>
         <button class="btn-sm btn-del"  onclick="deleteEntry(${e.id})">Delete</button>` : ''}

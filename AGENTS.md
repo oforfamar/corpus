@@ -88,6 +88,7 @@ Stores one row per measurement session per user.
 | `body_water_pct` | REAL | |
 | `metabolic_age` | INTEGER | |
 | `bmr_kcal` | INTEGER | |
+| `physique_rating` | INTEGER | 1–9 (Tanita/Omron scale: 1=Hidden obese … 9=Very muscular) |
 | `muscle_mass_kg` | REAL | Total body |
 | `bone_mass_kg` | REAL | |
 | `visceral_fat` | REAL | |

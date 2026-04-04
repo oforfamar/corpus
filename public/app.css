@@ -64,7 +64,7 @@ select {
 .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
 /* ── Stats row ── */
-.stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+.stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; margin-bottom: 1.5rem; }
 .stat-card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow);

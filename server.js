@@ -59,6 +59,19 @@ app.use((req, res, next) => {
   next();
 });
 
+// ── Logout ─────────────────────────────────────────────────────────────────
+app.post('/api/logout', async (req, res) => {
+  if (AUTH_BYPASS) {
+    return res.redirect('/');
+  }
+  try {
+    await auth.api.signOut({ headers: req.headers });
+  } catch {
+    // best-effort — clear the session cookie regardless
+  }
+  res.redirect('/api/auth/sign-in/social?providerId=authelia&callbackURL=/');
+});
+
 // ── Static files ───────────────────────────────────────────────────────────
 app.use(express.static(path.join(__dirname, 'public')));
 
