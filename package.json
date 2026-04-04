@@ -2,6 +2,7 @@
   "name": "corpus",
   "version": "1.0.0",
   "description": "Self-hosted body composition tracker with OIDC authentication, built with Node.js, SQLite, and Chart.js.",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

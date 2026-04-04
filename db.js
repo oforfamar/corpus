@@ -141,3 +141,46 @@ export function deleteEntry(id) {
 export function getDistinctUsers() {
   return stmtDistinctUsers.all().map(r => r.user_name);
 }
+
+// ── User profiles ──────────────────────────────────────────────────────────
+
+db.exec(`
+  CREATE TABLE IF NOT EXISTS user_profiles (
+    user_id       TEXT PRIMARY KEY,
+    user_name     TEXT NOT NULL,
+    date_of_birth TEXT NOT NULL,
+    height_cm     REAL NOT NULL,
+    sex           TEXT NOT NULL CHECK(sex IN ('male','female')),
+    updated_at    TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+`);
+
+const stmtGetProfile = db.prepare(`
+  SELECT * FROM user_profiles WHERE user_id = ?
+`);
+
+const stmtUpsertProfile = db.prepare(`
+  INSERT INTO user_profiles (user_id, user_name, date_of_birth, height_cm, sex, updated_at)
+  VALUES (@user_id, @user_name, @date_of_birth, @height_cm, @sex, datetime('now'))
+  ON CONFLICT(user_id) DO UPDATE SET
+    user_name     = excluded.user_name,
+    date_of_birth = excluded.date_of_birth,
+    height_cm     = excluded.height_cm,
+    sex           = excluded.sex,
+    updated_at    = excluded.updated_at
+`);
+
+export function getProfile(userId) {
+  return stmtGetProfile.get(userId) ?? null;
+}
+
+export function upsertProfile(userId, data) {
+  stmtUpsertProfile.run({
+    user_id: userId,
+    user_name: data.user_name,
+    date_of_birth: data.date_of_birth,
+    height_cm: Number(data.height_cm),
+    sex: data.sex,
+  });
+  return stmtGetProfile.get(userId);
+}

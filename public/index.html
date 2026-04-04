@@ -6,6 +6,7 @@
   <title>Corpus</title>
   <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -20,29 +21,19 @@
       --muted:    #7b82a0;
       --danger:   #e05c6e;
       --success:  #4cbb8a;
+      --warning:  #f5a623;
       --radius:   10px;
       --shadow:   0 4px 24px rgba(0,0,0,.45);
     }
 
-    body {
-      font-family: 'Inter', system-ui, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-    }
+    body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
 
-    /* ── Header ─────────────────────────────────────────────────────────── */
+    /* ── Header ── */
     header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0 2rem;
-      height: 60px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--border);
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 2rem; height: 60px;
+      background: var(--surface); border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
     }
     .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: .05em; color: var(--accent); }
     .header-right { display: flex; align-items: center; gap: 1rem; }
@@ -53,6 +44,12 @@
       font-weight: 700; font-size: .85rem;
     }
     .user-name { font-size: .9rem; color: var(--muted); }
+    .btn-edit-profile {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: .3rem .75rem; border-radius: 6px;
+      cursor: pointer; font-size: .8rem; transition: all .15s;
+    }
+    .btn-edit-profile:hover { border-color: var(--accent); color: var(--accent); }
     .btn-logout {
       background: transparent; border: 1px solid var(--border);
       color: var(--muted); padding: .3rem .75rem; border-radius: 6px;
@@ -60,157 +57,119 @@
     }
     .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
 
-    /* ── Main layout ─────────────────────────────────────────────────────── */
+    /* ── Main ── */
     main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
 
-    /* ── Controls bar ────────────────────────────────────────────────────── */
-    .controls {
-      display: flex; align-items: center; gap: 1rem;
-      margin-bottom: 1.5rem; flex-wrap: wrap;
-    }
+    /* ── Controls ── */
+    .controls { display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem; flex-wrap: wrap; }
     .filter-label { font-size: .85rem; color: var(--muted); }
     select {
       background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: .4rem .75rem; border-radius: 6px;
-      font-size: .875rem; cursor: pointer;
+      color: var(--text); padding: .4rem .75rem; border-radius: 6px; font-size: .875rem; cursor: pointer;
     }
-    .btn {
-      padding: .45rem 1.1rem; border-radius: 7px;
-      font-size: .875rem; font-weight: 500; cursor: pointer;
-      border: none; transition: all .15s;
-    }
+    .btn { padding: .45rem 1.1rem; border-radius: 7px; font-size: .875rem; font-weight: 500; cursor: pointer; border: none; transition: all .15s; }
     .btn-primary { background: var(--accent); color: #fff; }
     .btn-primary:hover { filter: brightness(1.1); }
-    .btn-danger { background: var(--danger); color: #fff; }
-    .btn-danger:hover { filter: brightness(1.1); }
-    .btn-secondary {
-      background: transparent; border: 1px solid var(--border);
-      color: var(--muted);
-    }
+    .btn-secondary { background: transparent; border: 1px solid var(--border); color: var(--muted); }
     .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
 
-    /* ── Form card ───────────────────────────────────────────────────────── */
-    .card {
+    /* ── Stats row ── */
+    .stats-row { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card {
       background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.5rem;
-      margin-bottom: 2rem; box-shadow: var(--shadow);
+      border-radius: var(--radius); padding: 1rem 1.1rem; box-shadow: var(--shadow);
     }
-    .card-title {
-      font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem;
-      color: var(--text); display: flex; align-items: center; gap: .5rem;
-    }
-    .card-title .toggle-chevron { cursor: pointer; color: var(--muted); font-size: .9rem; }
+    .stat-label { font-size: .72rem; text-transform: uppercase; letter-spacing: .07em; color: var(--muted); margin-bottom: .35rem; }
+    .stat-value { font-size: 1.45rem; font-weight: 700; line-height: 1; }
+    .stat-sub { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+    .stat-sub b { color: var(--text); }
+    .good  { color: var(--success); }
+    .warn  { color: var(--warning); }
+    .bad   { color: var(--danger); }
+    .neutral { color: var(--text); }
 
-    .form-section-title {
-      font-size: .75rem; font-weight: 600; text-transform: uppercase;
-      letter-spacing: .08em; color: var(--accent); margin: 1.25rem 0 .75rem;
+    .profile-prompt {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: .9rem 1.2rem;
+      font-size: .875rem; color: var(--muted); margin-bottom: 1.5rem;
     }
-    .form-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-      gap: .75rem;
-    }
+    .profile-prompt a { color: var(--accent); cursor: pointer; text-decoration: underline; }
+
+    /* ── Card ── */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 2rem; box-shadow: var(--shadow); }
+    .card-title { font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem; color: var(--text); display: flex; align-items: center; gap: .5rem; }
+    .card-title .toggle-chevron { cursor: pointer; color: var(--muted); font-size: .9rem; margin-left: auto; }
+
+    /* ── Form ── */
+    .form-section-title { font-size: .75rem; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--accent); margin: 1.25rem 0 .75rem; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: .75rem; }
     .form-group { display: flex; flex-direction: column; gap: .3rem; }
     .form-group label { font-size: .78rem; color: var(--muted); }
-    .form-group input {
+    .form-group input, .form-group select {
       background: var(--surface2); border: 1px solid var(--border);
-      color: var(--text); padding: .45rem .65rem; border-radius: 6px;
-      font-size: .875rem; width: 100%; transition: border-color .15s;
+      color: var(--text); padding: .45rem .65rem; border-radius: 6px; font-size: .875rem; width: 100%; transition: border-color .15s;
     }
-    .form-group input:focus { outline: none; border-color: var(--accent); }
+    .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--accent); }
     .form-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); }
-
     .form-actions { margin-top: 1.25rem; display: flex; gap: .75rem; }
 
-    /* ── Charts ──────────────────────────────────────────────────────────── */
-    .charts-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    .chart-card {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow);
-    }
-    .chart-card h3 {
-      font-size: .875rem; font-weight: 600; color: var(--muted);
-      margin-bottom: 1rem; text-transform: uppercase; letter-spacing: .06em;
-    }
+    /* ── Charts ── */
+    .charts-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(520px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+    .chart-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow); }
+    .chart-card h3 { font-size: .875rem; font-weight: 600; color: var(--muted); margin-bottom: 1rem; text-transform: uppercase; letter-spacing: .06em; }
     .chart-wrap { position: relative; height: 220px; }
 
-    /* ── Table ───────────────────────────────────────────────────────────── */
+    /* ── Table ── */
     .table-wrap { overflow-x: auto; }
-    table {
-      width: 100%; border-collapse: collapse; font-size: .825rem;
-    }
-    thead th {
-      background: var(--surface2); color: var(--muted);
-      font-weight: 600; padding: .6rem .75rem; text-align: left;
-      border-bottom: 1px solid var(--border); white-space: nowrap;
-    }
+    table { width: 100%; border-collapse: collapse; font-size: .825rem; }
+    thead th { background: var(--surface2); color: var(--muted); font-weight: 600; padding: .6rem .75rem; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
     tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
     tbody tr:hover { background: var(--surface2); }
     tbody td { padding: .55rem .75rem; white-space: nowrap; }
     .td-actions { display: flex; gap: .4rem; }
-    .btn-sm {
-      padding: .25rem .6rem; font-size: .75rem; border-radius: 5px;
-      cursor: pointer; border: none; font-weight: 500;
-    }
+    .btn-sm { padding: .25rem .6rem; font-size: .75rem; border-radius: 5px; cursor: pointer; border: none; font-weight: 500; }
     .btn-edit { background: var(--accent); color: #fff; }
     .btn-del  { background: var(--danger); color: #fff; }
-    .user-badge {
-      display: inline-block; padding: .15rem .5rem; border-radius: 99px;
-      font-size: .75rem; font-weight: 600; background: var(--surface2);
-      border: 1px solid var(--border);
-    }
+    .user-badge { display: inline-block; padding: .15rem .5rem; border-radius: 99px; font-size: .75rem; font-weight: 600; background: var(--surface2); border: 1px solid var(--border); }
+    .tag-you { font-size: .7rem; background: var(--accent); color: #fff; padding: .1rem .4rem; border-radius: 4px; margin-left: .3rem; }
 
-    /* ── Modal ───────────────────────────────────────────────────────────── */
-    .modal-overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.65);
-      display: flex; align-items: center; justify-content: center;
-      z-index: 200; padding: 1rem;
-    }
+    /* ── Modal ── */
+    .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.65); display: flex; align-items: center; justify-content: center; z-index: 200; padding: 1rem; }
     .modal-overlay.hidden { display: none; }
-    .modal {
-      background: var(--surface); border: 1px solid var(--border);
-      border-radius: var(--radius); padding: 1.75rem;
-      width: 100%; max-width: 780px; max-height: 90vh;
-      overflow-y: auto; box-shadow: var(--shadow);
-    }
-    .modal-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem; }
+    .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.75rem; width: 100%; max-width: 780px; max-height: 90vh; overflow-y: auto; box-shadow: var(--shadow); }
+    .modal-title { font-size: 1.1rem; font-weight: 600; margin-bottom: .4rem; }
+    .modal-subtitle { font-size: .85rem; color: var(--muted); margin-bottom: 1.25rem; }
     .modal-actions { margin-top: 1.25rem; display: flex; gap: .75rem; justify-content: flex-end; }
 
-    /* ── Misc ────────────────────────────────────────────────────────────── */
+    /* ── Misc ── */
     .hidden { display: none !important; }
-    .empty-state {
-      text-align: center; padding: 3rem; color: var(--muted); font-size: .9rem;
-    }
-    .tag-you {
-      font-size: .7rem; background: var(--accent); color: #fff;
-      padding: .1rem .4rem; border-radius: 4px; margin-left: .3rem;
-    }
+    .empty-state { text-align: center; padding: 3rem; color: var(--muted); font-size: .9rem; }
+    .legend-dots { display: flex; gap: 1rem; margin-top: .5rem; flex-wrap: wrap; }
+    .legend-dot { display: flex; align-items: center; gap: .35rem; font-size: .75rem; color: var(--muted); }
+    .dot { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
 
     @media (max-width: 600px) {
       .charts-grid { grid-template-columns: 1fr; }
       header { padding: 0 1rem; }
       main { padding: 1rem; }
+      .stats-row { grid-template-columns: 1fr 1fr; }
     }
   </style>
 </head>
 <body>
 
-<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<!-- ── Header ── -->
 <header>
   <span class="logo">corpus</span>
   <div class="header-right">
     <div class="avatar" id="avatar">?</div>
     <span class="user-name" id="headerName">Loading…</span>
+    <button class="btn-edit-profile" onclick="openProfileModal()">Edit profile</button>
     <button class="btn-logout" onclick="logout()">Sign out</button>
   </div>
 </header>
 
-<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<!-- ── Main ── -->
 <main>
 
   <!-- Controls -->
@@ -222,6 +181,12 @@
     <button class="btn btn-primary" onclick="toggleForm()">+ Add measurement</button>
   </div>
 
+  <!-- Stats row -->
+  <div id="statsRow" class="stats-row hidden"></div>
+  <div id="profilePrompt" class="profile-prompt hidden">
+    Profile not set up — <a onclick="openProfileModal()">add your date of birth, height and sex</a> to see derived metrics.
+  </div>
+
   <!-- Entry form -->
   <div class="card hidden" id="formCard">
     <div class="card-title">
@@ -229,20 +194,18 @@
       <span class="toggle-chevron" onclick="toggleForm()">✕</span>
     </div>
     <form id="entryForm" onsubmit="submitEntry(event)">
-      <!-- General -->
       <div class="form-section-title">General</div>
       <div class="form-grid">
         <div class="form-group" style="grid-column: span 2;">
           <label>Date *</label>
           <input type="date" id="f_date" required />
         </div>
-        <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="f_weight_kg" /></div>
-        <div class="form-group"><label>BMI</label><input type="number" step="0.1" id="f_bmi" /></div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="f_weight_kg" oninput="autoFillBmi('f')" /></div>
+        <div class="form-group"><label>BMI <span id="f_bmi_note" style="font-style:italic;font-size:.7rem"></span></label><input type="number" step="0.1" id="f_bmi" /></div>
         <div class="form-group"><label>Metabolic age</label><input type="number" step="1" id="f_metabolic_age" /></div>
         <div class="form-group"><label>BMR (kcal)</label><input type="number" step="1" id="f_bmr_kcal" /></div>
       </div>
 
-      <!-- Body composition -->
       <div class="form-section-title">Body composition</div>
       <div class="form-grid">
         <div class="form-group"><label>Body fat (%)</label><input type="number" step="0.1" id="f_body_fat_pct" /></div>
@@ -252,7 +215,6 @@
         <div class="form-group"><label>Visceral fat</label><input type="number" step="0.1" id="f_visceral_fat" /></div>
       </div>
 
-      <!-- Limbs -->
       <div class="form-section-title">Limb breakdown</div>
       <div class="form-grid">
         <div class="form-group"><label>Left arm muscle (kg)</label><input type="number" step="0.01" id="f_left_arm_muscle_kg" /></div>
@@ -276,33 +238,32 @@
 
   <!-- Charts -->
   <div class="charts-grid" id="chartsGrid">
-    <div class="chart-card"><h3>Weight &amp; BMI</h3><div class="chart-wrap"><canvas id="chart_weight"></canvas></div></div>
-    <div class="chart-card"><h3>Body fat &amp; Body water (%)</h3><div class="chart-wrap"><canvas id="chart_fat_water"></canvas></div></div>
+    <div class="chart-card">
+      <h3>Weight &amp; BMI</h3>
+      <div class="chart-wrap"><canvas id="chart_weight"></canvas></div>
+      <div class="legend-dots" id="legend_weight"></div>
+    </div>
+    <div class="chart-card">
+      <h3>Body fat &amp; Body water (%)</h3>
+      <div class="chart-wrap"><canvas id="chart_fat_water"></canvas></div>
+      <div class="legend-dots" id="legend_fat_water"></div>
+    </div>
     <div class="chart-card"><h3>Muscle mass &amp; Bone mass (kg)</h3><div class="chart-wrap"><canvas id="chart_muscle_bone"></canvas></div></div>
     <div class="chart-card"><h3>Visceral fat / Metabolic age / BMR</h3><div class="chart-wrap"><canvas id="chart_misc"></canvas></div></div>
     <div class="chart-card"><h3>Limb muscle mass (kg)</h3><div class="chart-wrap"><canvas id="chart_limb_muscle"></canvas></div></div>
     <div class="chart-card"><h3>Limb fat (%)</h3><div class="chart-wrap"><canvas id="chart_limb_fat"></canvas></div></div>
   </div>
 
-  <!-- Table -->
+  <!-- History table -->
   <div class="card">
     <div class="card-title">Measurement history</div>
     <div class="table-wrap">
       <table>
         <thead>
           <tr>
-            <th>Date</th>
-            <th>Profile</th>
-            <th>Weight</th>
-            <th>BMI</th>
-            <th>Fat %</th>
-            <th>Water %</th>
-            <th>Muscle (kg)</th>
-            <th>Bone (kg)</th>
-            <th>Visceral fat</th>
-            <th>Met. age</th>
-            <th>BMR</th>
-            <th></th>
+            <th>Date</th><th>Profile</th><th>Weight</th><th>BMI</th>
+            <th>Fat %</th><th>Water %</th><th>Muscle (kg)</th><th>Bone (kg)</th>
+            <th>Visceral fat</th><th>Met. age</th><th>BMR</th><th></th>
           </tr>
         </thead>
         <tbody id="tableBody">
@@ -314,7 +275,7 @@
 
 </main>
 
-<!-- ── Edit modal ──────────────────────────────────────────────────────────── -->
+<!-- ── Edit modal ── -->
 <div class="modal-overlay hidden" id="editModal">
   <div class="modal">
     <div class="modal-title">Edit measurement</div>
@@ -327,8 +288,8 @@
           <label>Date *</label>
           <input type="date" id="e_date" required />
         </div>
-        <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="e_weight_kg" /></div>
-        <div class="form-group"><label>BMI</label><input type="number" step="0.1" id="e_bmi" /></div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="e_weight_kg" oninput="autoFillBmi('e')" /></div>
+        <div class="form-group"><label>BMI <span id="e_bmi_note" style="font-style:italic;font-size:.7rem"></span></label><input type="number" step="0.1" id="e_bmi" /></div>
         <div class="form-group"><label>Metabolic age</label><input type="number" step="1" id="e_metabolic_age" /></div>
         <div class="form-group"><label>BMR (kcal)</label><input type="number" step="1" id="e_bmr_kcal" /></div>
       </div>
@@ -364,46 +325,77 @@
   </div>
 </div>
 
+<!-- ── Profile modal ── -->
+<div class="modal-overlay hidden" id="profileModal">
+  <div class="modal" style="max-width:420px">
+    <div class="modal-title">Your profile</div>
+    <div class="modal-subtitle">Stored once. Used to compute BMI, reference ranges and BMR comparisons.</div>
+    <form id="profileForm" onsubmit="submitProfile(event)">
+      <div class="form-grid" style="grid-template-columns: 1fr;">
+        <div class="form-group">
+          <label>Date of birth *</label>
+          <input type="date" id="p_dob" required />
+        </div>
+        <div class="form-group">
+          <label>Height (cm) *</label>
+          <input type="number" step="0.1" id="p_height" required min="50" max="280" />
+        </div>
+        <div class="form-group">
+          <label>Sex *</label>
+          <select id="p_sex" required>
+            <option value="">— select —</option>
+            <option value="male">Male</option>
+            <option value="female">Female</option>
+          </select>
+        </div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeProfileModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save profile</button>
+      </div>
+    </form>
+  </div>
+</div>
+
 <script>
 // ── State ──────────────────────────────────────────────────────────────────
 let me = null;
+let myProfile = null;       // current user's profile (or null)
 let allEntries = [];
 const charts = {};
 
-// Colour palette per user (cycles if more than 8)
-const PALETTE = [
-  '#6c8ef5', '#f56ca8', '#4cbb8a', '#f5a623',
-  '#a78bfa', '#38bdf8', '#fb923c', '#e879f9',
-];
+// Colour palette per user
+const PALETTE = ['#6c8ef5','#f56ca8','#4cbb8a','#f5a623','#a78bfa','#38bdf8','#fb923c','#e879f9'];
 const userColors = {};
 let colorIdx = 0;
 function colorFor(name) {
-  if (!userColors[name]) {
-    userColors[name] = PALETTE[colorIdx % PALETTE.length];
-    colorIdx++;
-  }
+  if (!userColors[name]) { userColors[name] = PALETTE[colorIdx % PALETTE.length]; colorIdx++; }
   return userColors[name];
 }
 
 // ── Boot ───────────────────────────────────────────────────────────────────
 async function boot() {
   try {
-    const r = await fetch('/api/me');
-    if (!r.ok) { window.location.reload(); return; }
-    me = await r.json();
+    const [meRes, profileRes] = await Promise.all([fetch('/api/me'), fetch('/api/profile')]);
+    if (!meRes.ok) { window.location.reload(); return; }
+    me = await meRes.json();
+    myProfile = profileRes.ok ? await profileRes.json() : null;
+
     document.getElementById('headerName').textContent = me.name;
     document.getElementById('avatar').textContent = (me.name || '?')[0].toUpperCase();
-    // Set default date to today
     document.getElementById('f_date').value = todayISO();
+    updateBmiNotes();
+
+    // Auto-open profile modal if not complete
+    if (!myProfile || !myProfile.height_cm || !myProfile.date_of_birth || !myProfile.sex) {
+      openProfileModal(true);
+    }
+
     await loadData();
-  } catch (e) {
-    console.error(e);
-  }
+  } catch (e) { console.error(e); }
 }
 
-function todayISO() {
-  return new Date().toISOString().split('T')[0];
-}
+function todayISO() { return new Date().toISOString().split('T')[0]; }
 
 async function loadData() {
   const filter = document.getElementById('userFilter').value;
@@ -411,6 +403,7 @@ async function loadData() {
   const r = await fetch(url);
   allEntries = await r.json();
   await refreshUserFilter();
+  renderStats();
   renderCharts();
   renderTable();
 }
@@ -420,7 +413,6 @@ async function refreshUserFilter() {
   const current = sel.value;
   const r = await fetch('/api/users');
   const users = await r.json();
-  // Rebuild options, preserve current selection
   sel.innerHTML = '<option value="">All profiles</option>';
   users.forEach(u => {
     const opt = document.createElement('option');
@@ -439,18 +431,253 @@ async function logout() {
   window.location.href = '/api/auth/sign-in/social?providerId=authelia&callbackURL=/';
 }
 
-// ── Form ───────────────────────────────────────────────────────────────────
-function toggleForm() {
-  document.getElementById('formCard').classList.toggle('hidden');
+// ── Profile modal ──────────────────────────────────────────────────────────
+let profileModalMandatory = false;
+
+function openProfileModal(mandatory = false) {
+  profileModalMandatory = mandatory;
+  if (myProfile) {
+    document.getElementById('p_dob').value    = myProfile.date_of_birth || '';
+    document.getElementById('p_height').value = myProfile.height_cm     || '';
+    document.getElementById('p_sex').value    = myProfile.sex           || '';
+  }
+  document.getElementById('profileModal').classList.remove('hidden');
 }
+
+function closeProfileModal() {
+  if (profileModalMandatory) return; // can't dismiss until saved
+  document.getElementById('profileModal').classList.add('hidden');
+}
+
+async function submitProfile(e) {
+  e.preventDefault();
+  const body = {
+    date_of_birth: document.getElementById('p_dob').value,
+    height_cm:     document.getElementById('p_height').value,
+    sex:           document.getElementById('p_sex').value,
+  };
+  const r = await fetch('/api/profile', {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  });
+  if (r.ok) {
+    myProfile = await r.json();
+    profileModalMandatory = false;
+    document.getElementById('profileModal').classList.add('hidden');
+    updateBmiNotes();
+    renderStats();
+    renderCharts(); // re-render to apply/remove reference bands
+  } else {
+    const err = await r.json();
+    alert(err.error || 'Failed to save profile');
+  }
+}
+
+document.getElementById('profileModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('profileModal')) closeProfileModal();
+});
+
+// ── BMI auto-fill ──────────────────────────────────────────────────────────
+function updateBmiNotes() {
+  const note = myProfile?.height_cm ? 'auto' : '';
+  const fn = document.getElementById('f_bmi_note');
+  const en = document.getElementById('e_bmi_note');
+  if (fn) fn.textContent = note;
+  if (en) en.textContent = note;
+}
+
+function autoFillBmi(prefix) {
+  if (!myProfile?.height_cm) return;
+  const weightEl = document.getElementById(`${prefix}_weight_kg`);
+  const bmiEl    = document.getElementById(`${prefix}_bmi`);
+  const w = parseFloat(weightEl.value);
+  if (!isNaN(w) && w > 0) {
+    const h = myProfile.height_cm / 100;
+    bmiEl.value = (w / (h * h)).toFixed(1);
+  } else {
+    bmiEl.value = '';
+  }
+}
+
+// ── Derived metric helpers ─────────────────────────────────────────────────
+
+// Age in decimal years from a YYYY-MM-DD string
+function ageFromDob(dob) {
+  const birth = new Date(dob);
+  const now   = new Date();
+  return (now - birth) / (365.25 * 24 * 3600 * 1000);
+}
+
+// BMI category
+function bmiCategory(bmi) {
+  if (bmi < 18.5) return { label: 'Underweight', cls: 'warn' };
+  if (bmi < 25)   return { label: 'Normal',      cls: 'good' };
+  if (bmi < 30)   return { label: 'Overweight',  cls: 'warn' };
+  return               { label: 'Obese',         cls: 'bad'  };
+}
+
+// ACE body fat ranges — returns { fitness: [lo,hi], acceptable: [lo,hi] }
+function aceRanges(sex, age) {
+  // Base ranges
+  const ranges = sex === 'female'
+    ? { fitness: [21, 24], acceptable: [25, 31] }
+    : { fitness: [14, 17], acceptable: [18, 24] };
+  // ACE guidelines: shift upper acceptable bound +2% per decade over 60
+  if (age >= 60) {
+    const decades = Math.floor((age - 60) / 10) + 1;
+    ranges.acceptable[1] += decades * 2;
+    ranges.fitness[1]    += decades;
+  }
+  return ranges;
+}
+
+// ACE body fat category label
+function fatCategory(fatPct, sex, age) {
+  const r = aceRanges(sex, age);
+  if (sex === 'female') {
+    if (fatPct < 10)           return { label: 'Essential fat', cls: 'warn' };
+    if (fatPct < 14)           return { label: 'Athletes',      cls: 'good' };
+    if (fatPct <= r.fitness[1])return { label: 'Fitness',       cls: 'good' };
+    if (fatPct <= r.acceptable[1]) return { label: 'Acceptable', cls: 'neutral' };
+    return                          { label: 'Obese',           cls: 'bad' };
+  } else {
+    if (fatPct < 2)            return { label: 'Essential fat', cls: 'warn' };
+    if (fatPct < 6)            return { label: 'Athletes',      cls: 'good' };
+    if (fatPct <= r.fitness[1])return { label: 'Fitness',       cls: 'good' };
+    if (fatPct <= r.acceptable[1]) return { label: 'Acceptable', cls: 'neutral' };
+    return                          { label: 'Obese',           cls: 'bad' };
+  }
+}
+
+// Mifflin-St Jeor BMR  (kcal/day)
+function mifflinBmr(weightKg, heightCm, age, sex) {
+  const base = 10 * weightKg + 6.25 * heightCm - 5 * age;
+  return sex === 'male' ? base + 5 : base - 161;
+}
+
+// ── Stats row ──────────────────────────────────────────────────────────────
+function renderStats() {
+  const statsRow      = document.getElementById('statsRow');
+  const profilePrompt = document.getElementById('profilePrompt');
+  const filter        = document.getElementById('userFilter').value;
+
+  // Only show stats for a single user (the logged-in one)
+  const viewingOwn = !filter || filter === me?.name;
+  if (!viewingOwn) {
+    statsRow.classList.add('hidden');
+    profilePrompt.classList.add('hidden');
+    return;
+  }
+
+  // Get own entries sorted by date desc
+  const ownEntries = allEntries
+    .filter(e => e.user_id === me?.id)
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (!ownEntries.length) {
+    statsRow.classList.add('hidden');
+    profilePrompt.classList.add('hidden');
+    return;
+  }
+
+  const last = ownEntries[0];
+  const prev = ownEntries[1] || null;
+
+  if (!myProfile?.height_cm || !myProfile?.date_of_birth || !myProfile?.sex) {
+    statsRow.classList.add('hidden');
+    profilePrompt.classList.remove('hidden');
+    return;
+  }
+  profilePrompt.classList.add('hidden');
+
+  const age        = ageFromDob(myProfile.date_of_birth);
+  const heightCm   = myProfile.height_cm;
+  const sex        = myProfile.sex;
+  const heightM    = heightCm / 100;
+
+  const cards = [];
+
+  // 1. Weight
+  if (last.weight_kg != null) {
+    const trend = prev?.weight_kg != null
+      ? `${last.weight_kg - prev.weight_kg >= 0 ? '▲' : '▼'} ${Math.abs(last.weight_kg - prev.weight_kg).toFixed(1)} kg vs prev`
+      : '';
+    cards.push(`
+      <div class="stat-card">
+        <div class="stat-label">Weight</div>
+        <div class="stat-value neutral">${last.weight_kg} <small style="font-size:.9rem;font-weight:400">kg</small></div>
+        ${trend ? `<div class="stat-sub">${trend}</div>` : ''}
+      </div>`);
+  }
+
+  // 2. BMI
+  const bmiVal = last.bmi ?? (last.weight_kg ? +(last.weight_kg / (heightM * heightM)).toFixed(1) : null);
+  if (bmiVal != null) {
+    const cat = bmiCategory(bmiVal);
+    cards.push(`
+      <div class="stat-card">
+        <div class="stat-label">BMI</div>
+        <div class="stat-value ${cat.cls}">${bmiVal.toFixed(1)}</div>
+        <div class="stat-sub"><b>${cat.label}</b></div>
+      </div>`);
+  }
+
+  // 3. Body fat %
+  if (last.body_fat_pct != null) {
+    const cat = fatCategory(last.body_fat_pct, sex, age);
+    cards.push(`
+      <div class="stat-card">
+        <div class="stat-label">Body fat</div>
+        <div class="stat-value ${cat.cls}">${last.body_fat_pct.toFixed(1)}<small style="font-size:.9rem;font-weight:400">%</small></div>
+        <div class="stat-sub"><b>${cat.label}</b></div>
+      </div>`);
+  }
+
+  // 4. Metabolic age delta
+  if (last.metabolic_age != null) {
+    const actualAge = Math.floor(age);
+    const delta     = last.metabolic_age - actualAge;
+    const cls       = delta <= 0 ? 'good' : delta <= 5 ? 'warn' : 'bad';
+    const sign      = delta >= 0 ? '+' : '';
+    cards.push(`
+      <div class="stat-card">
+        <div class="stat-label">Metabolic age</div>
+        <div class="stat-value ${cls}">${last.metabolic_age} <small style="font-size:.9rem;font-weight:400">yrs</small></div>
+        <div class="stat-sub">Actual: ${actualAge} yrs &mdash; <b class="${cls}">${sign}${delta} yrs</b></div>
+      </div>`);
+  }
+
+  // 5. BMR comparison (only if weight is available)
+  if (last.bmr_kcal != null && last.weight_kg != null) {
+    const formula = Math.round(mifflinBmr(last.weight_kg, heightCm, age, sex));
+    const delta   = last.bmr_kcal - formula;
+    const sign    = delta >= 0 ? '+' : '';
+    const cls     = Math.abs(delta) < 150 ? 'good' : Math.abs(delta) < 300 ? 'warn' : 'bad';
+    cards.push(`
+      <div class="stat-card">
+        <div class="stat-label">BMR</div>
+        <div class="stat-value neutral">${last.bmr_kcal} <small style="font-size:.9rem;font-weight:400">kcal</small></div>
+        <div class="stat-sub">Formula: ${formula} kcal &mdash; <b class="${cls}">${sign}${delta}</b></div>
+      </div>`);
+  }
+
+  if (cards.length) {
+    statsRow.innerHTML = cards.join('');
+    statsRow.classList.remove('hidden');
+  } else {
+    statsRow.classList.add('hidden');
+  }
+}
+
+// ── Form ───────────────────────────────────────────────────────────────────
+function toggleForm() { document.getElementById('formCard').classList.toggle('hidden'); }
 
 const FIELDS = [
   'weight_kg','bmi','metabolic_age','bmr_kcal',
   'body_fat_pct','body_water_pct','muscle_mass_kg','bone_mass_kg','visceral_fat',
-  'left_arm_muscle_kg','left_arm_fat_pct',
-  'right_arm_muscle_kg','right_arm_fat_pct',
-  'left_leg_muscle_kg','left_leg_fat_pct',
-  'right_leg_muscle_kg','right_leg_fat_pct',
+  'left_arm_muscle_kg','left_arm_fat_pct','right_arm_muscle_kg','right_arm_fat_pct',
+  'left_leg_muscle_kg','left_leg_fat_pct','right_leg_muscle_kg','right_leg_fat_pct',
   'trunk_muscle_kg','trunk_fat_pct',
 ];
 
@@ -467,8 +694,7 @@ async function submitEntry(e) {
   e.preventDefault();
   const data = collectForm('f');
   const r = await fetch('/api/entries', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
   if (r.ok) {
@@ -484,7 +710,7 @@ async function submitEntry(e) {
 
 // ── Edit modal ─────────────────────────────────────────────────────────────
 function openEditModal(entry) {
-  document.getElementById('e_id').value = entry.id;
+  document.getElementById('e_id').value   = entry.id;
   document.getElementById('e_date').value = entry.date;
   FIELDS.forEach(f => {
     const el = document.getElementById(`e_${f}`);
@@ -492,137 +718,50 @@ function openEditModal(entry) {
   });
   document.getElementById('editModal').classList.remove('hidden');
 }
-
-function closeEditModal() {
-  document.getElementById('editModal').classList.add('hidden');
-}
+function closeEditModal() { document.getElementById('editModal').classList.add('hidden'); }
 
 async function submitEdit(e) {
   e.preventDefault();
-  const id = document.getElementById('e_id').value;
+  const id   = document.getElementById('e_id').value;
   const data = collectForm('e');
   const r = await fetch(`/api/entries/${id}`, {
-    method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    method: 'PUT', headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(data),
   });
-  if (r.ok) {
-    closeEditModal();
-    await loadData();
-  } else {
-    const err = await r.json();
-    alert(err.error || 'Failed to update entry');
-  }
+  if (r.ok) { closeEditModal(); await loadData(); }
+  else { const err = await r.json(); alert(err.error || 'Failed to update entry'); }
 }
 
 async function deleteEntry(id) {
   if (!confirm('Delete this measurement? This cannot be undone.')) return;
   const r = await fetch(`/api/entries/${id}`, { method: 'DELETE' });
-  if (r.ok) {
-    await loadData();
-  } else {
-    alert('Failed to delete entry');
-  }
+  if (r.ok) await loadData();
+  else alert('Failed to delete entry');
 }
 
-// Close modal on overlay click
 document.getElementById('editModal').addEventListener('click', (e) => {
   if (e.target === document.getElementById('editModal')) closeEditModal();
 });
 
 // ── Charts ─────────────────────────────────────────────────────────────────
-const CHART_DEFAULTS = {
-  responsive: true,
-  maintainAspectRatio: false,
-  interaction: { mode: 'index', intersect: false },
-  plugins: {
-    legend: { labels: { color: '#7b82a0', boxWidth: 12, font: { size: 11 } } },
-    tooltip: { backgroundColor: '#1a1d27', borderColor: '#2e3148', borderWidth: 1 },
+const CHART_SCALE_DEFAULTS = {
+  x: {
+    type: 'time',
+    time: { unit: 'month', displayFormats: { month: 'MMM yy' } },
+    grid: { color: '#2e3148' },
+    ticks: { color: '#7b82a0', font: { size: 11 } },
   },
-  scales: {
-    x: {
-      type: 'time',
-      time: { unit: 'month', displayFormats: { month: 'MMM yy' } },
-      grid: { color: '#2e3148' },
-      ticks: { color: '#7b82a0', font: { size: 11 } },
-    },
-    y: {
-      grid: { color: '#2e3148' },
-      ticks: { color: '#7b82a0', font: { size: 11 } },
-    },
+  y: {
+    grid: { color: '#2e3148' },
+    ticks: { color: '#7b82a0', font: { size: 11 } },
   },
 };
 
-function makeDatasets(field, entries) {
-  // Group entries by user name
-  const byUser = {};
-  entries.forEach(e => {
-    if (e[field] == null) return;
-    if (!byUser[e.user_name]) byUser[e.user_name] = [];
-    byUser[e.user_name].push({ x: e.date, y: e[field] });
-  });
-  return Object.entries(byUser).map(([name, data]) => ({
-    label: name,
-    data,
-    borderColor: colorFor(name),
-    backgroundColor: colorFor(name) + '33',
-    pointBackgroundColor: colorFor(name),
-    pointRadius: 4,
-    pointHoverRadius: 6,
-    tension: 0.3,
-    fill: false,
-  }));
-}
-
-function makeDatasetsMulti(fields, entries) {
-  // One dataset per field per user
-  const datasets = [];
-  const fieldColors = ['#6c8ef5','#f56ca8','#4cbb8a','#f5a623','#a78bfa'];
-  const filter = document.getElementById('userFilter').value;
-
-  if (filter) {
-    // Single user → one dataset per field, use field colours
-    fields.forEach((f, i) => {
-      const data = entries
-        .filter(e => e[f] != null)
-        .map(e => ({ x: e.date, y: e[f] }));
-      datasets.push({
-        label: LABELS[f] || f,
-        data,
-        borderColor: fieldColors[i % fieldColors.length],
-        backgroundColor: fieldColors[i % fieldColors.length] + '33',
-        pointBackgroundColor: fieldColors[i % fieldColors.length],
-        pointRadius: 4, pointHoverRadius: 6, tension: 0.3, fill: false,
-      });
-    });
-  } else {
-    // All users → one dataset per user per field, differentiate by user colour
-    const byUser = {};
-    entries.forEach(e => {
-      if (!byUser[e.user_name]) byUser[e.user_name] = [];
-      byUser[e.user_name].push(e);
-    });
-    Object.entries(byUser).forEach(([name, userEntries]) => {
-      fields.forEach((f, i) => {
-        const data = userEntries
-          .filter(e => e[f] != null)
-          .map(e => ({ x: e.date, y: e[f] }));
-        const base = colorFor(name);
-        datasets.push({
-          label: `${name} — ${LABELS[f] || f}`,
-          data,
-          borderColor: base,
-          backgroundColor: base + '33',
-          pointBackgroundColor: base,
-          pointRadius: 4, pointHoverRadius: 6, tension: 0.3,
-          fill: false,
-          borderDash: i % 2 === 1 ? [5, 3] : [],
-        });
-      });
-    });
-  }
-  return datasets;
-}
+const CHART_PLUGIN_DEFAULTS = {
+  legend: { labels: { color: '#7b82a0', boxWidth: 12, font: { size: 11 } } },
+  tooltip: { backgroundColor: '#1a1d27', borderColor: '#2e3148', borderWidth: 1 },
+  annotation: { annotations: {} },
+};
 
 const LABELS = {
   weight_kg: 'Weight (kg)', bmi: 'BMI',
@@ -637,9 +776,130 @@ const LABELS = {
   trunk_fat_pct: 'Trunk fat',
 };
 
-function initOrUpdateChart(id, datasets, yLabel) {
+const FIELD_COLORS = ['#6c8ef5','#f56ca8','#4cbb8a','#f5a623','#a78bfa'];
+
+function makeDatasetsMulti(fields, entries) {
+  const filter = document.getElementById('userFilter').value;
+  const datasets = [];
+
+  if (filter) {
+    fields.forEach((f, i) => {
+      const data = entries.filter(e => e[f] != null).map(e => ({ x: e.date, y: e[f] }));
+      datasets.push({
+        label: LABELS[f] || f, data,
+        borderColor: FIELD_COLORS[i % FIELD_COLORS.length],
+        backgroundColor: FIELD_COLORS[i % FIELD_COLORS.length] + '33',
+        pointBackgroundColor: FIELD_COLORS[i % FIELD_COLORS.length],
+        pointRadius: 4, pointHoverRadius: 6, tension: 0.3, fill: false,
+      });
+    });
+  } else {
+    const byUser = {};
+    entries.forEach(e => { if (!byUser[e.user_name]) byUser[e.user_name] = []; byUser[e.user_name].push(e); });
+    Object.entries(byUser).forEach(([name, ue]) => {
+      fields.forEach((f, i) => {
+        const data = ue.filter(e => e[f] != null).map(e => ({ x: e.date, y: e[f] }));
+        const base = colorFor(name);
+        datasets.push({
+          label: `${name} — ${LABELS[f] || f}`, data,
+          borderColor: base, backgroundColor: base + '33', pointBackgroundColor: base,
+          pointRadius: 4, pointHoverRadius: 6, tension: 0.3, fill: false,
+          borderDash: i % 2 === 1 ? [5, 3] : [],
+        });
+      });
+    });
+  }
+  return datasets;
+}
+
+// Build annotation object for weight chart (ideal weight band)
+function weightAnnotations() {
+  const filter   = document.getElementById('userFilter').value;
+  const viewOwn  = !filter || filter === me?.name;
+  if (!viewOwn || !myProfile?.height_cm) return {};
+
+  const h   = myProfile.height_cm / 100;
+  const lo  = +(h * h * 18.5).toFixed(1);
+  const hi  = +(h * h * 24.9).toFixed(1);
+
+  return {
+    idealBand: {
+      type: 'box',
+      yMin: lo, yMax: hi,
+      backgroundColor: 'rgba(76,187,138,0.10)',
+      borderColor:     'rgba(76,187,138,0.35)',
+      borderWidth: 1,
+      label: {
+        display: true, content: `Ideal weight ${lo}–${hi} kg`,
+        position: 'end', color: '#4cbb8a',
+        font: { size: 10 }, yAdjust: -6,
+      },
+    },
+  };
+}
+
+// Build annotation object for body fat chart (ACE fitness + acceptable bands)
+function fatAnnotations() {
+  const filter   = document.getElementById('userFilter').value;
+  const viewOwn  = !filter || filter === me?.name;
+  if (!viewOwn || !myProfile?.sex || !myProfile?.date_of_birth) return {};
+
+  const age    = ageFromDob(myProfile.date_of_birth);
+  const ranges = aceRanges(myProfile.sex, age);
+
+  return {
+    fitnessBand: {
+      type: 'box',
+      yMin: ranges.fitness[0], yMax: ranges.fitness[1],
+      backgroundColor: 'rgba(76,187,138,0.15)',
+      borderColor:     'rgba(76,187,138,0.4)',
+      borderWidth: 1,
+      label: {
+        display: true, content: `Fitness ${ranges.fitness[0]}–${ranges.fitness[1]}%`,
+        position: 'end', color: '#4cbb8a',
+        font: { size: 10 }, yAdjust: -6,
+      },
+    },
+    acceptableBand: {
+      type: 'box',
+      yMin: ranges.acceptable[0], yMax: ranges.acceptable[1],
+      backgroundColor: 'rgba(245,166,35,0.10)',
+      borderColor:     'rgba(245,166,35,0.35)',
+      borderWidth: 1,
+      label: {
+        display: true, content: `Acceptable ${ranges.acceptable[0]}–${ranges.acceptable[1]}%`,
+        position: 'end', color: '#f5a623',
+        font: { size: 10 }, yAdjust: 12,
+      },
+    },
+  };
+}
+
+function buildChartOptions(yLabel, annotations = {}) {
+  return {
+    responsive: true,
+    maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      ...CHART_PLUGIN_DEFAULTS,
+      annotation: { annotations },
+    },
+    scales: {
+      x: { ...CHART_SCALE_DEFAULTS.x },
+      y: {
+        ...CHART_SCALE_DEFAULTS.y,
+        title: yLabel
+          ? { display: true, text: yLabel, color: '#7b82a0', font: { size: 10 } }
+          : { display: false },
+      },
+    },
+  };
+}
+
+function initOrUpdateChart(id, datasets, yLabel, annotations = {}) {
   if (charts[id]) {
     charts[id].data.datasets = datasets;
+    charts[id].options.plugins.annotation.annotations = annotations;
     charts[id].update();
     return;
   }
@@ -647,61 +907,54 @@ function initOrUpdateChart(id, datasets, yLabel) {
   charts[id] = new Chart(ctx, {
     type: 'line',
     data: { datasets },
-    options: {
-      ...JSON.parse(JSON.stringify(CHART_DEFAULTS)),
-      scales: {
-        ...JSON.parse(JSON.stringify(CHART_DEFAULTS.scales)),
-        y: {
-          ...CHART_DEFAULTS.scales.y,
-          title: yLabel
-            ? { display: true, text: yLabel, color: '#7b82a0', font: { size: 10 } }
-            : { display: false },
-        },
-      },
-    },
+    options: buildChartOptions(yLabel, annotations),
   });
+}
+
+function renderLegend(containerId, items) {
+  const el = document.getElementById(containerId);
+  if (!el) return;
+  el.innerHTML = items.map(i =>
+    `<span class="legend-dot"><span class="dot" style="background:${i.color};opacity:${i.opacity ?? 1}"></span>${i.label}</span>`
+  ).join('');
 }
 
 function renderCharts() {
   const e = allEntries;
-  // 1. Weight + BMI — two y-axes
-  if (charts['chart_weight']) {
-    charts['chart_weight'].data.datasets = makeDatasetsMulti(['weight_kg','bmi'], e);
-    charts['chart_weight'].update();
-  } else {
-    const ctx = document.getElementById('chart_weight').getContext('2d');
-    charts['chart_weight'] = new Chart(ctx, {
-      type: 'line',
-      data: { datasets: makeDatasetsMulti(['weight_kg','bmi'], e) },
-      options: {
-        ...JSON.parse(JSON.stringify(CHART_DEFAULTS)),
-        scales: {
-          x: { ...JSON.parse(JSON.stringify(CHART_DEFAULTS.scales.x)) },
-          y: { ...CHART_DEFAULTS.scales.y, title: { display: true, text: 'kg', color: '#7b82a0', font:{size:10} } },
-        },
-      },
-    });
-  }
 
-  initOrUpdateChart('chart_fat_water', makeDatasetsMulti(['body_fat_pct','body_water_pct'], e), '%');
+  // Weight chart with ideal band annotation
+  const wAnnotations = weightAnnotations();
+  initOrUpdateChart('chart_weight', makeDatasetsMulti(['weight_kg','bmi'], e), 'kg / BMI', wAnnotations);
+
+  const wLegend = [{ color: '#6c8ef5', label: 'Weight (kg)' }, { color: '#f56ca8', label: 'BMI' }];
+  if (Object.keys(wAnnotations).length) {
+    wLegend.push({ color: 'rgba(76,187,138,0.5)', label: 'Ideal weight (BMI 18.5–24.9)' });
+  }
+  renderLegend('legend_weight', wLegend);
+
+  // Body fat chart with ACE bands
+  const fAnnotations = fatAnnotations();
+  initOrUpdateChart('chart_fat_water', makeDatasetsMulti(['body_fat_pct','body_water_pct'], e), '%', fAnnotations);
+
+  const fLegend = [{ color: '#6c8ef5', label: 'Body fat (%)' }, { color: '#f56ca8', label: 'Body water (%)' }];
+  if (Object.keys(fAnnotations).length) {
+    fLegend.push({ color: 'rgba(76,187,138,0.5)', label: 'Fitness range' });
+    fLegend.push({ color: 'rgba(245,166,35,0.5)', label: 'Acceptable range' });
+  }
+  renderLegend('legend_fat_water', fLegend);
+
   initOrUpdateChart('chart_muscle_bone', makeDatasetsMulti(['muscle_mass_kg','bone_mass_kg'], e), 'kg');
-  initOrUpdateChart('chart_misc', makeDatasetsMulti(['visceral_fat','metabolic_age','bmr_kcal'], e));
+  initOrUpdateChart('chart_misc',        makeDatasetsMulti(['visceral_fat','metabolic_age','bmr_kcal'], e));
   initOrUpdateChart('chart_limb_muscle', makeDatasetsMulti([
-    'left_arm_muscle_kg','right_arm_muscle_kg',
-    'left_leg_muscle_kg','right_leg_muscle_kg',
-    'trunk_muscle_kg',
+    'left_arm_muscle_kg','right_arm_muscle_kg','left_leg_muscle_kg','right_leg_muscle_kg','trunk_muscle_kg',
   ], e), 'kg');
   initOrUpdateChart('chart_limb_fat', makeDatasetsMulti([
-    'left_arm_fat_pct','right_arm_fat_pct',
-    'left_leg_fat_pct','right_leg_fat_pct',
-    'trunk_fat_pct',
+    'left_arm_fat_pct','right_arm_fat_pct','left_leg_fat_pct','right_leg_fat_pct','trunk_fat_pct',
   ], e), '%');
 }
 
 // ── Table ──────────────────────────────────────────────────────────────────
-function fmt(v, decimals = 1) {
-  return v == null ? '—' : Number(v).toFixed(decimals);
-}
+function fmt(v, decimals = 1) { return v == null ? '—' : Number(v).toFixed(decimals); }
 
 function renderTable() {
   const tbody = document.getElementById('tableBody');
@@ -709,16 +962,12 @@ function renderTable() {
     tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>`;
     return;
   }
-  // Sort descending by date for the table
   const sorted = [...allEntries].sort((a, b) => b.date.localeCompare(a.date));
   tbody.innerHTML = sorted.map(e => {
     const isMe = e.user_id === me?.id;
     return `<tr>
       <td>${e.date}</td>
-      <td>
-        <span class="user-badge">${e.user_name}</span>
-        ${isMe ? '<span class="tag-you">you</span>' : ''}
-      </td>
+      <td><span class="user-badge">${e.user_name}</span>${isMe ? '<span class="tag-you">you</span>' : ''}</td>
       <td>${fmt(e.weight_kg)} kg</td>
       <td>${fmt(e.bmi)}</td>
       <td>${fmt(e.body_fat_pct)}%</td>
@@ -728,14 +977,10 @@ function renderTable() {
       <td>${fmt(e.visceral_fat)}</td>
       <td>${fmt(e.metabolic_age, 0)}</td>
       <td>${fmt(e.bmr_kcal, 0)}</td>
-      <td>
-        <div class="td-actions">
-          ${isMe ? `
-            <button class="btn-sm btn-edit" onclick='openEditModal(${JSON.stringify(e)})'>Edit</button>
-            <button class="btn-sm btn-del" onclick="deleteEntry(${e.id})">Delete</button>
-          ` : ''}
-        </div>
-      </td>
+      <td><div class="td-actions">${isMe ? `
+        <button class="btn-sm btn-edit" onclick='openEditModal(${JSON.stringify(e)})'>Edit</button>
+        <button class="btn-sm btn-del"  onclick="deleteEntry(${e.id})">Delete</button>` : ''}
+      </div></td>
     </tr>`;
   }).join('');
 }

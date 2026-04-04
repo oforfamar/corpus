@@ -4,6 +4,7 @@ import { toNodeHandler } from 'better-auth/node';
 import { auth } from './auth.js';
 import entriesRouter from './routes/entries.js';
 import usersRouter from './routes/users.js';
+import profileRouter from './routes/profile.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -11,16 +12,30 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const AUTH_BYPASS = process.env.AUTH_BYPASS === 'true';
+
+if (AUTH_BYPASS) {
+  console.warn('[corpus] ⚠  AUTH_BYPASS=true — all requests are authenticated as Dev User. Never use this in production.');
+}
 
 // ── Parse JSON bodies ──────────────────────────────────────────────────────
 app.use(express.json());
 
 // ── better-auth handler (mounts /api/auth/*) ──────────────────────────────
-app.all('/api/auth/*splat', toNodeHandler(auth));
+// Skipped entirely in bypass mode (no OIDC needed)
+if (!AUTH_BYPASS) {
+  app.all('/api/auth/*splat', toNodeHandler(auth));
+}
 
 // ── Session middleware ─────────────────────────────────────────────────────
-// Attaches req.session (and req.session.user) from the better-auth cookie
 app.use(async (req, _res, next) => {
+  if (AUTH_BYPASS) {
+    req.session = {
+      userId: 'dev-user',
+      user: { id: 'dev-user', name: 'Dev User', email: 'dev@localhost' },
+    };
+    return next();
+  }
   try {
     const session = await auth.api.getSession({ headers: req.headers });
     req.session = session ?? null;
@@ -32,15 +47,13 @@ app.use(async (req, _res, next) => {
 
 // ── Auth guard — redirect to OIDC login for browser requests ──────────────
 app.use((req, res, next) => {
-  // Allow auth endpoints and static assets through
+  if (AUTH_BYPASS) return next();
   if (req.path.startsWith('/api/auth')) return next();
 
   if (!req.session) {
-    // API calls get 401; browser navigation gets redirected to login
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    // Redirect browser to better-auth OIDC sign-in
     return res.redirect('/api/auth/sign-in/social?providerId=authelia&callbackURL=/');
   }
   next();
@@ -52,6 +65,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // ── API routes ─────────────────────────────────────────────────────────────
 app.use('/api/entries', entriesRouter);
 app.use('/api/users', usersRouter);
+app.use('/api/profile', profileRouter);
 
 // ── Current user info (used by the SPA) ───────────────────────────────────
 app.get('/api/me', (req, res) => {
