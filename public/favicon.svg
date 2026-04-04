@@ -1,0 +1,16 @@
+<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'>
+  <!-- Dark background circle -->
+  <circle cx='50' cy='50' r='48' fill='#1a1d27' stroke='#6c8ef5' stroke-width='3'/>
+  <!-- Body outline - torso -->
+  <ellipse cx='50' cy='52' rx='18' ry='22' fill='none' stroke='#6c8ef5' stroke-width='3'/>
+  <!-- Head -->
+  <circle cx='50' cy='22' r='10' fill='none' stroke='#6c8ef5' stroke-width='3'/>
+  <!-- Arms -->
+  <line x1='32' y1='45' x2='18' y2='58' stroke='#6c8ef5' stroke-width='3' stroke-linecap='round'/>
+  <line x1='68' y1='45' x2='82' y2='58' stroke='#6c8ef5' stroke-width='3' stroke-linecap='round'/>
+  <!-- Legs -->
+  <line x1='43' y1='73' x2='37' y2='88' stroke='#6c8ef5' stroke-width='3' stroke-linecap='round'/>
+  <line x1='57' y1='73' x2='63' y2='88' stroke='#6c8ef5' stroke-width='3' stroke-linecap='round'/>
+  <!-- Chart line overlay on torso -->
+  <polyline points='35,58 42,48 50,54 58,44 65,50' fill='none' stroke='#f56ca8' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/>
+</svg>
