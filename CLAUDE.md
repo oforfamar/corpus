@@ -14,7 +14,7 @@
 | Layer | Choice |
 |---|---|
 | Runtime | Node.js 20+, ES modules (`"type": "module"`) |
-| Framework | Express 4 |
+| Framework | Express 5 |
 | Database | SQLite via `better-sqlite3` |
 | Auth | `better-auth` with `genericOAuth` plugin (OIDC, Authelia) |
 | DB adapter | `@better-auth/kysely-adapter` + `kysely` with `SqliteDialect` |
