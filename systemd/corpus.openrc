@@ -1,0 +1,29 @@
+#!/sbin/openrc-run
+
+name="corpus"
+description="Corpus — self-hosted body composition tracker"
+command="/usr/bin/node"
+command_args="server.js"
+command_user="corpus:corpus"
+directory="/opt/corpus"
+pidfile="/run/${RC_SVCNAME}.pid"
+command_background=true
+output_log="/var/log/corpus/corpus.log"
+error_log="/var/log/corpus/corpus.err"
+
+# Load environment variables from .env file
+: "${CORPUS_ENV:=/opt/corpus/.env}"
+
+depend() {
+    need net
+    after firewall
+}
+
+start_pre() {
+    # Source the .env file so variables are available to the process
+    if [ -f "${CORPUS_ENV}" ]; then
+        export $(grep -v '^#' "${CORPUS_ENV}" | xargs)
+    fi
+    checkpath --directory --owner corpus:corpus --mode 0750 /var/log/corpus
+    checkpath --directory --owner corpus:corpus --mode 0750 /opt/corpus/data
+}

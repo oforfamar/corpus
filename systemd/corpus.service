@@ -1,0 +1,26 @@
+[Unit]
+Description=Corpus — self-hosted body composition tracker
+Documentation=https://github.com/oforfamar/corpus
+After=network.target
+
+[Service]
+Type=simple
+User=corpus
+Group=corpus
+WorkingDirectory=/opt/corpus
+EnvironmentFile=/opt/corpus/.env
+ExecStart=/usr/bin/node server.js
+Restart=on-failure
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=corpus
+
+# Hardening
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ReadWritePaths=/opt/corpus/data
+
+[Install]
+WantedBy=multi-user.target
