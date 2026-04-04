@@ -1,0 +1,17 @@
+{
+  "name": "corpus",
+  "version": "1.0.0",
+  "description": "Self-hosted body composition tracker with OIDC authentication, built with Node.js, SQLite, and Chart.js.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-auth": "^1.2.7",
+    "better-sqlite3": "^12.0.0",
+    "dotenv": "^16.4.7",
+    "express": "^4.21.2"
+  }
+}

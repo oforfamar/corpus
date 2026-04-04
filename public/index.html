@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Corpus</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #0f1117;
+      --surface:  #1a1d27;
+      --surface2: #232637;
+      --border:   #2e3148;
+      --accent:   #6c8ef5;
+      --accent2:  #f56ca8;
+      --text:     #e2e5f0;
+      --muted:    #7b82a0;
+      --danger:   #e05c6e;
+      --success:  #4cbb8a;
+      --radius:   10px;
+      --shadow:   0 4px 24px rgba(0,0,0,.45);
+    }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── Header ─────────────────────────────────────────────────────────── */
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 60px;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .logo { font-size: 1.25rem; font-weight: 700; letter-spacing: .05em; color: var(--accent); }
+    .header-right { display: flex; align-items: center; gap: 1rem; }
+    .avatar {
+      width: 34px; height: 34px; border-radius: 50%;
+      background: var(--accent); color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-weight: 700; font-size: .85rem;
+    }
+    .user-name { font-size: .9rem; color: var(--muted); }
+    .btn-logout {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted); padding: .3rem .75rem; border-radius: 6px;
+      cursor: pointer; font-size: .8rem; transition: all .15s;
+    }
+    .btn-logout:hover { border-color: var(--danger); color: var(--danger); }
+
+    /* ── Main layout ─────────────────────────────────────────────────────── */
+    main { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; }
+
+    /* ── Controls bar ────────────────────────────────────────────────────── */
+    .controls {
+      display: flex; align-items: center; gap: 1rem;
+      margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .filter-label { font-size: .85rem; color: var(--muted); }
+    select {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: .4rem .75rem; border-radius: 6px;
+      font-size: .875rem; cursor: pointer;
+    }
+    .btn {
+      padding: .45rem 1.1rem; border-radius: 7px;
+      font-size: .875rem; font-weight: 500; cursor: pointer;
+      border: none; transition: all .15s;
+    }
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-danger { background: var(--danger); color: #fff; }
+    .btn-danger:hover { filter: brightness(1.1); }
+    .btn-secondary {
+      background: transparent; border: 1px solid var(--border);
+      color: var(--muted);
+    }
+    .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ── Form card ───────────────────────────────────────────────────────── */
+    .card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+      margin-bottom: 2rem; box-shadow: var(--shadow);
+    }
+    .card-title {
+      font-size: 1rem; font-weight: 600; margin-bottom: 1.25rem;
+      color: var(--text); display: flex; align-items: center; gap: .5rem;
+    }
+    .card-title .toggle-chevron { cursor: pointer; color: var(--muted); font-size: .9rem; }
+
+    .form-section-title {
+      font-size: .75rem; font-weight: 600; text-transform: uppercase;
+      letter-spacing: .08em; color: var(--accent); margin: 1.25rem 0 .75rem;
+    }
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+      gap: .75rem;
+    }
+    .form-group { display: flex; flex-direction: column; gap: .3rem; }
+    .form-group label { font-size: .78rem; color: var(--muted); }
+    .form-group input {
+      background: var(--surface2); border: 1px solid var(--border);
+      color: var(--text); padding: .45rem .65rem; border-radius: 6px;
+      font-size: .875rem; width: 100%; transition: border-color .15s;
+    }
+    .form-group input:focus { outline: none; border-color: var(--accent); }
+    .form-group input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.6); }
+
+    .form-actions { margin-top: 1.25rem; display: flex; gap: .75rem; }
+
+    /* ── Charts ──────────────────────────────────────────────────────────── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(520px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .chart-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.25rem; box-shadow: var(--shadow);
+    }
+    .chart-card h3 {
+      font-size: .875rem; font-weight: 600; color: var(--muted);
+      margin-bottom: 1rem; text-transform: uppercase; letter-spacing: .06em;
+    }
+    .chart-wrap { position: relative; height: 220px; }
+
+    /* ── Table ───────────────────────────────────────────────────────────── */
+    .table-wrap { overflow-x: auto; }
+    table {
+      width: 100%; border-collapse: collapse; font-size: .825rem;
+    }
+    thead th {
+      background: var(--surface2); color: var(--muted);
+      font-weight: 600; padding: .6rem .75rem; text-align: left;
+      border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    tbody tr { border-bottom: 1px solid var(--border); transition: background .1s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody td { padding: .55rem .75rem; white-space: nowrap; }
+    .td-actions { display: flex; gap: .4rem; }
+    .btn-sm {
+      padding: .25rem .6rem; font-size: .75rem; border-radius: 5px;
+      cursor: pointer; border: none; font-weight: 500;
+    }
+    .btn-edit { background: var(--accent); color: #fff; }
+    .btn-del  { background: var(--danger); color: #fff; }
+    .user-badge {
+      display: inline-block; padding: .15rem .5rem; border-radius: 99px;
+      font-size: .75rem; font-weight: 600; background: var(--surface2);
+      border: 1px solid var(--border);
+    }
+
+    /* ── Modal ───────────────────────────────────────────────────────────── */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,.65);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 200; padding: 1rem;
+    }
+    .modal-overlay.hidden { display: none; }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem;
+      width: 100%; max-width: 780px; max-height: 90vh;
+      overflow-y: auto; box-shadow: var(--shadow);
+    }
+    .modal-title { font-size: 1.1rem; font-weight: 600; margin-bottom: 1.25rem; }
+    .modal-actions { margin-top: 1.25rem; display: flex; gap: .75rem; justify-content: flex-end; }
+
+    /* ── Misc ────────────────────────────────────────────────────────────── */
+    .hidden { display: none !important; }
+    .empty-state {
+      text-align: center; padding: 3rem; color: var(--muted); font-size: .9rem;
+    }
+    .tag-you {
+      font-size: .7rem; background: var(--accent); color: #fff;
+      padding: .1rem .4rem; border-radius: 4px; margin-left: .3rem;
+    }
+
+    @media (max-width: 600px) {
+      .charts-grid { grid-template-columns: 1fr; }
+      header { padding: 0 1rem; }
+      main { padding: 1rem; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── Header ─────────────────────────────────────────────────────────────── -->
+<header>
+  <span class="logo">corpus</span>
+  <div class="header-right">
+    <div class="avatar" id="avatar">?</div>
+    <span class="user-name" id="headerName">Loading…</span>
+    <button class="btn-logout" onclick="logout()">Sign out</button>
+  </div>
+</header>
+
+<!-- ── Main ───────────────────────────────────────────────────────────────── -->
+<main>
+
+  <!-- Controls -->
+  <div class="controls">
+    <span class="filter-label">Viewing:</span>
+    <select id="userFilter" onchange="onFilterChange()">
+      <option value="">All profiles</option>
+    </select>
+    <button class="btn btn-primary" onclick="toggleForm()">+ Add measurement</button>
+  </div>
+
+  <!-- Entry form -->
+  <div class="card hidden" id="formCard">
+    <div class="card-title">
+      New measurement
+      <span class="toggle-chevron" onclick="toggleForm()">✕</span>
+    </div>
+    <form id="entryForm" onsubmit="submitEntry(event)">
+      <!-- General -->
+      <div class="form-section-title">General</div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Date *</label>
+          <input type="date" id="f_date" required />
+        </div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="f_weight_kg" /></div>
+        <div class="form-group"><label>BMI</label><input type="number" step="0.1" id="f_bmi" /></div>
+        <div class="form-group"><label>Metabolic age</label><input type="number" step="1" id="f_metabolic_age" /></div>
+        <div class="form-group"><label>BMR (kcal)</label><input type="number" step="1" id="f_bmr_kcal" /></div>
+      </div>
+
+      <!-- Body composition -->
+      <div class="form-section-title">Body composition</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Body fat (%)</label><input type="number" step="0.1" id="f_body_fat_pct" /></div>
+        <div class="form-group"><label>Body water (%)</label><input type="number" step="0.1" id="f_body_water_pct" /></div>
+        <div class="form-group"><label>Muscle mass (kg)</label><input type="number" step="0.1" id="f_muscle_mass_kg" /></div>
+        <div class="form-group"><label>Bone mass (kg)</label><input type="number" step="0.01" id="f_bone_mass_kg" /></div>
+        <div class="form-group"><label>Visceral fat</label><input type="number" step="0.1" id="f_visceral_fat" /></div>
+      </div>
+
+      <!-- Limbs -->
+      <div class="form-section-title">Limb breakdown</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Left arm muscle (kg)</label><input type="number" step="0.01" id="f_left_arm_muscle_kg" /></div>
+        <div class="form-group"><label>Left arm fat (%)</label><input type="number" step="0.1" id="f_left_arm_fat_pct" /></div>
+        <div class="form-group"><label>Right arm muscle (kg)</label><input type="number" step="0.01" id="f_right_arm_muscle_kg" /></div>
+        <div class="form-group"><label>Right arm fat (%)</label><input type="number" step="0.1" id="f_right_arm_fat_pct" /></div>
+        <div class="form-group"><label>Left leg muscle (kg)</label><input type="number" step="0.01" id="f_left_leg_muscle_kg" /></div>
+        <div class="form-group"><label>Left leg fat (%)</label><input type="number" step="0.1" id="f_left_leg_fat_pct" /></div>
+        <div class="form-group"><label>Right leg muscle (kg)</label><input type="number" step="0.01" id="f_right_leg_muscle_kg" /></div>
+        <div class="form-group"><label>Right leg fat (%)</label><input type="number" step="0.1" id="f_right_leg_fat_pct" /></div>
+        <div class="form-group"><label>Trunk muscle (kg)</label><input type="number" step="0.01" id="f_trunk_muscle_kg" /></div>
+        <div class="form-group"><label>Trunk fat (%)</label><input type="number" step="0.1" id="f_trunk_fat_pct" /></div>
+      </div>
+
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary">Save measurement</button>
+        <button type="button" class="btn btn-secondary" onclick="toggleForm()">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Charts -->
+  <div class="charts-grid" id="chartsGrid">
+    <div class="chart-card"><h3>Weight &amp; BMI</h3><div class="chart-wrap"><canvas id="chart_weight"></canvas></div></div>
+    <div class="chart-card"><h3>Body fat &amp; Body water (%)</h3><div class="chart-wrap"><canvas id="chart_fat_water"></canvas></div></div>
+    <div class="chart-card"><h3>Muscle mass &amp; Bone mass (kg)</h3><div class="chart-wrap"><canvas id="chart_muscle_bone"></canvas></div></div>
+    <div class="chart-card"><h3>Visceral fat / Metabolic age / BMR</h3><div class="chart-wrap"><canvas id="chart_misc"></canvas></div></div>
+    <div class="chart-card"><h3>Limb muscle mass (kg)</h3><div class="chart-wrap"><canvas id="chart_limb_muscle"></canvas></div></div>
+    <div class="chart-card"><h3>Limb fat (%)</h3><div class="chart-wrap"><canvas id="chart_limb_fat"></canvas></div></div>
+  </div>
+
+  <!-- Table -->
+  <div class="card">
+    <div class="card-title">Measurement history</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Profile</th>
+            <th>Weight</th>
+            <th>BMI</th>
+            <th>Fat %</th>
+            <th>Water %</th>
+            <th>Muscle (kg)</th>
+            <th>Bone (kg)</th>
+            <th>Visceral fat</th>
+            <th>Met. age</th>
+            <th>BMR</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <tr><td colspan="12"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</main>
+
+<!-- ── Edit modal ──────────────────────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="editModal">
+  <div class="modal">
+    <div class="modal-title">Edit measurement</div>
+    <form id="editForm" onsubmit="submitEdit(event)">
+      <input type="hidden" id="e_id" />
+
+      <div class="form-section-title">General</div>
+      <div class="form-grid">
+        <div class="form-group" style="grid-column: span 2;">
+          <label>Date *</label>
+          <input type="date" id="e_date" required />
+        </div>
+        <div class="form-group"><label>Weight (kg)</label><input type="number" step="0.1" id="e_weight_kg" /></div>
+        <div class="form-group"><label>BMI</label><input type="number" step="0.1" id="e_bmi" /></div>
+        <div class="form-group"><label>Metabolic age</label><input type="number" step="1" id="e_metabolic_age" /></div>
+        <div class="form-group"><label>BMR (kcal)</label><input type="number" step="1" id="e_bmr_kcal" /></div>
+      </div>
+
+      <div class="form-section-title">Body composition</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Body fat (%)</label><input type="number" step="0.1" id="e_body_fat_pct" /></div>
+        <div class="form-group"><label>Body water (%)</label><input type="number" step="0.1" id="e_body_water_pct" /></div>
+        <div class="form-group"><label>Muscle mass (kg)</label><input type="number" step="0.1" id="e_muscle_mass_kg" /></div>
+        <div class="form-group"><label>Bone mass (kg)</label><input type="number" step="0.01" id="e_bone_mass_kg" /></div>
+        <div class="form-group"><label>Visceral fat</label><input type="number" step="0.1" id="e_visceral_fat" /></div>
+      </div>
+
+      <div class="form-section-title">Limb breakdown</div>
+      <div class="form-grid">
+        <div class="form-group"><label>Left arm muscle (kg)</label><input type="number" step="0.01" id="e_left_arm_muscle_kg" /></div>
+        <div class="form-group"><label>Left arm fat (%)</label><input type="number" step="0.1" id="e_left_arm_fat_pct" /></div>
+        <div class="form-group"><label>Right arm muscle (kg)</label><input type="number" step="0.01" id="e_right_arm_muscle_kg" /></div>
+        <div class="form-group"><label>Right arm fat (%)</label><input type="number" step="0.1" id="e_right_arm_fat_pct" /></div>
+        <div class="form-group"><label>Left leg muscle (kg)</label><input type="number" step="0.01" id="e_left_leg_muscle_kg" /></div>
+        <div class="form-group"><label>Left leg fat (%)</label><input type="number" step="0.1" id="e_left_leg_fat_pct" /></div>
+        <div class="form-group"><label>Right leg muscle (kg)</label><input type="number" step="0.01" id="e_right_leg_muscle_kg" /></div>
+        <div class="form-group"><label>Right leg fat (%)</label><input type="number" step="0.1" id="e_right_leg_fat_pct" /></div>
+        <div class="form-group"><label>Trunk muscle (kg)</label><input type="number" step="0.01" id="e_trunk_muscle_kg" /></div>
+        <div class="form-group"><label>Trunk fat (%)</label><input type="number" step="0.1" id="e_trunk_fat_pct" /></div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────────
+let me = null;
+let allEntries = [];
+const charts = {};
+
+// Colour palette per user (cycles if more than 8)
+const PALETTE = [
+  '#6c8ef5', '#f56ca8', '#4cbb8a', '#f5a623',
+  '#a78bfa', '#38bdf8', '#fb923c', '#e879f9',
+];
+const userColors = {};
+let colorIdx = 0;
+function colorFor(name) {
+  if (!userColors[name]) {
+    userColors[name] = PALETTE[colorIdx % PALETTE.length];
+    colorIdx++;
+  }
+  return userColors[name];
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────────
+async function boot() {
+  try {
+    const r = await fetch('/api/me');
+    if (!r.ok) { window.location.reload(); return; }
+    me = await r.json();
+    document.getElementById('headerName').textContent = me.name;
+    document.getElementById('avatar').textContent = (me.name || '?')[0].toUpperCase();
+    // Set default date to today
+    document.getElementById('f_date').value = todayISO();
+    await loadData();
+  } catch (e) {
+    console.error(e);
+  }
+}
+
+function todayISO() {
+  return new Date().toISOString().split('T')[0];
+}
+
+async function loadData() {
+  const filter = document.getElementById('userFilter').value;
+  const url = filter ? `/api/entries?user=${encodeURIComponent(filter)}` : '/api/entries';
+  const r = await fetch(url);
+  allEntries = await r.json();
+  await refreshUserFilter();
+  renderCharts();
+  renderTable();
+}
+
+async function refreshUserFilter() {
+  const sel = document.getElementById('userFilter');
+  const current = sel.value;
+  const r = await fetch('/api/users');
+  const users = await r.json();
+  // Rebuild options, preserve current selection
+  sel.innerHTML = '<option value="">All profiles</option>';
+  users.forEach(u => {
+    const opt = document.createElement('option');
+    opt.value = u;
+    opt.textContent = u === me?.name ? `${u} (you)` : u;
+    if (u === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+function onFilterChange() { loadData(); }
+
+// ── Auth ───────────────────────────────────────────────────────────────────
+async function logout() {
+  await fetch('/api/auth/sign-out', { method: 'POST' });
+  window.location.href = '/api/auth/sign-in/social?providerId=authelia&callbackURL=/';
+}
+
+// ── Form ───────────────────────────────────────────────────────────────────
+function toggleForm() {
+  document.getElementById('formCard').classList.toggle('hidden');
+}
+
+const FIELDS = [
+  'weight_kg','bmi','metabolic_age','bmr_kcal',
+  'body_fat_pct','body_water_pct','muscle_mass_kg','bone_mass_kg','visceral_fat',
+  'left_arm_muscle_kg','left_arm_fat_pct',
+  'right_arm_muscle_kg','right_arm_fat_pct',
+  'left_leg_muscle_kg','left_leg_fat_pct',
+  'right_leg_muscle_kg','right_leg_fat_pct',
+  'trunk_muscle_kg','trunk_fat_pct',
+];
+
+function collectForm(prefix) {
+  const data = { date: document.getElementById(`${prefix}_date`).value };
+  FIELDS.forEach(f => {
+    const val = document.getElementById(`${prefix}_${f}`)?.value;
+    data[f] = val === '' ? null : val;
+  });
+  return data;
+}
+
+async function submitEntry(e) {
+  e.preventDefault();
+  const data = collectForm('f');
+  const r = await fetch('/api/entries', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (r.ok) {
+    document.getElementById('entryForm').reset();
+    document.getElementById('f_date').value = todayISO();
+    document.getElementById('formCard').classList.add('hidden');
+    await loadData();
+  } else {
+    const err = await r.json();
+    alert(err.error || 'Failed to save entry');
+  }
+}
+
+// ── Edit modal ─────────────────────────────────────────────────────────────
+function openEditModal(entry) {
+  document.getElementById('e_id').value = entry.id;
+  document.getElementById('e_date').value = entry.date;
+  FIELDS.forEach(f => {
+    const el = document.getElementById(`e_${f}`);
+    if (el) el.value = entry[f] ?? '';
+  });
+  document.getElementById('editModal').classList.remove('hidden');
+}
+
+function closeEditModal() {
+  document.getElementById('editModal').classList.add('hidden');
+}
+
+async function submitEdit(e) {
+  e.preventDefault();
+  const id = document.getElementById('e_id').value;
+  const data = collectForm('e');
+  const r = await fetch(`/api/entries/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  });
+  if (r.ok) {
+    closeEditModal();
+    await loadData();
+  } else {
+    const err = await r.json();
+    alert(err.error || 'Failed to update entry');
+  }
+}
+
+async function deleteEntry(id) {
+  if (!confirm('Delete this measurement? This cannot be undone.')) return;
+  const r = await fetch(`/api/entries/${id}`, { method: 'DELETE' });
+  if (r.ok) {
+    await loadData();
+  } else {
+    alert('Failed to delete entry');
+  }
+}
+
+// Close modal on overlay click
+document.getElementById('editModal').addEventListener('click', (e) => {
+  if (e.target === document.getElementById('editModal')) closeEditModal();
+});
+
+// ── Charts ─────────────────────────────────────────────────────────────────
+const CHART_DEFAULTS = {
+  responsive: true,
+  maintainAspectRatio: false,
+  interaction: { mode: 'index', intersect: false },
+  plugins: {
+    legend: { labels: { color: '#7b82a0', boxWidth: 12, font: { size: 11 } } },
+    tooltip: { backgroundColor: '#1a1d27', borderColor: '#2e3148', borderWidth: 1 },
+  },
+  scales: {
+    x: {
+      type: 'time',
+      time: { unit: 'month', displayFormats: { month: 'MMM yy' } },
+      grid: { color: '#2e3148' },
+      ticks: { color: '#7b82a0', font: { size: 11 } },
+    },
+    y: {
+      grid: { color: '#2e3148' },
+      ticks: { color: '#7b82a0', font: { size: 11 } },
+    },
+  },
+};
+
+function makeDatasets(field, entries) {
+  // Group entries by user name
+  const byUser = {};
+  entries.forEach(e => {
+    if (e[field] == null) return;
+    if (!byUser[e.user_name]) byUser[e.user_name] = [];
+    byUser[e.user_name].push({ x: e.date, y: e[field] });
+  });
+  return Object.entries(byUser).map(([name, data]) => ({
+    label: name,
+    data,
+    borderColor: colorFor(name),
+    backgroundColor: colorFor(name) + '33',
+    pointBackgroundColor: colorFor(name),
+    pointRadius: 4,
+    pointHoverRadius: 6,
+    tension: 0.3,
+    fill: false,
+  }));
+}
+
+function makeDatasetsMulti(fields, entries) {
+  // One dataset per field per user
+  const datasets = [];
+  const fieldColors = ['#6c8ef5','#f56ca8','#4cbb8a','#f5a623','#a78bfa'];
+  const filter = document.getElementById('userFilter').value;
+
+  if (filter) {
+    // Single user → one dataset per field, use field colours
+    fields.forEach((f, i) => {
+      const data = entries
+        .filter(e => e[f] != null)
+        .map(e => ({ x: e.date, y: e[f] }));
+      datasets.push({
+        label: LABELS[f] || f,
+        data,
+        borderColor: fieldColors[i % fieldColors.length],
+        backgroundColor: fieldColors[i % fieldColors.length] + '33',
+        pointBackgroundColor: fieldColors[i % fieldColors.length],
+        pointRadius: 4, pointHoverRadius: 6, tension: 0.3, fill: false,
+      });
+    });
+  } else {
+    // All users → one dataset per user per field, differentiate by user colour
+    const byUser = {};
+    entries.forEach(e => {
+      if (!byUser[e.user_name]) byUser[e.user_name] = [];
+      byUser[e.user_name].push(e);
+    });
+    Object.entries(byUser).forEach(([name, userEntries]) => {
+      fields.forEach((f, i) => {
+        const data = userEntries
+          .filter(e => e[f] != null)
+          .map(e => ({ x: e.date, y: e[f] }));
+        const base = colorFor(name);
+        datasets.push({
+          label: `${name} — ${LABELS[f] || f}`,
+          data,
+          borderColor: base,
+          backgroundColor: base + '33',
+          pointBackgroundColor: base,
+          pointRadius: 4, pointHoverRadius: 6, tension: 0.3,
+          fill: false,
+          borderDash: i % 2 === 1 ? [5, 3] : [],
+        });
+      });
+    });
+  }
+  return datasets;
+}
+
+const LABELS = {
+  weight_kg: 'Weight (kg)', bmi: 'BMI',
+  body_fat_pct: 'Body fat (%)', body_water_pct: 'Body water (%)',
+  muscle_mass_kg: 'Muscle (kg)', bone_mass_kg: 'Bone (kg)',
+  visceral_fat: 'Visceral fat', metabolic_age: 'Metabolic age', bmr_kcal: 'BMR (kcal)',
+  left_arm_muscle_kg: 'L arm muscle', right_arm_muscle_kg: 'R arm muscle',
+  left_leg_muscle_kg: 'L leg muscle', right_leg_muscle_kg: 'R leg muscle',
+  trunk_muscle_kg: 'Trunk muscle',
+  left_arm_fat_pct: 'L arm fat', right_arm_fat_pct: 'R arm fat',
+  left_leg_fat_pct: 'L leg fat', right_leg_fat_pct: 'R leg fat',
+  trunk_fat_pct: 'Trunk fat',
+};
+
+function initOrUpdateChart(id, datasets, yLabel) {
+  if (charts[id]) {
+    charts[id].data.datasets = datasets;
+    charts[id].update();
+    return;
+  }
+  const ctx = document.getElementById(id).getContext('2d');
+  charts[id] = new Chart(ctx, {
+    type: 'line',
+    data: { datasets },
+    options: {
+      ...JSON.parse(JSON.stringify(CHART_DEFAULTS)),
+      scales: {
+        ...JSON.parse(JSON.stringify(CHART_DEFAULTS.scales)),
+        y: {
+          ...CHART_DEFAULTS.scales.y,
+          title: yLabel
+            ? { display: true, text: yLabel, color: '#7b82a0', font: { size: 10 } }
+            : { display: false },
+        },
+      },
+    },
+  });
+}
+
+function renderCharts() {
+  const e = allEntries;
+  // 1. Weight + BMI — two y-axes
+  if (charts['chart_weight']) {
+    charts['chart_weight'].data.datasets = makeDatasetsMulti(['weight_kg','bmi'], e);
+    charts['chart_weight'].update();
+  } else {
+    const ctx = document.getElementById('chart_weight').getContext('2d');
+    charts['chart_weight'] = new Chart(ctx, {
+      type: 'line',
+      data: { datasets: makeDatasetsMulti(['weight_kg','bmi'], e) },
+      options: {
+        ...JSON.parse(JSON.stringify(CHART_DEFAULTS)),
+        scales: {
+          x: { ...JSON.parse(JSON.stringify(CHART_DEFAULTS.scales.x)) },
+          y: { ...CHART_DEFAULTS.scales.y, title: { display: true, text: 'kg', color: '#7b82a0', font:{size:10} } },
+        },
+      },
+    });
+  }
+
+  initOrUpdateChart('chart_fat_water', makeDatasetsMulti(['body_fat_pct','body_water_pct'], e), '%');
+  initOrUpdateChart('chart_muscle_bone', makeDatasetsMulti(['muscle_mass_kg','bone_mass_kg'], e), 'kg');
+  initOrUpdateChart('chart_misc', makeDatasetsMulti(['visceral_fat','metabolic_age','bmr_kcal'], e));
+  initOrUpdateChart('chart_limb_muscle', makeDatasetsMulti([
+    'left_arm_muscle_kg','right_arm_muscle_kg',
+    'left_leg_muscle_kg','right_leg_muscle_kg',
+    'trunk_muscle_kg',
+  ], e), 'kg');
+  initOrUpdateChart('chart_limb_fat', makeDatasetsMulti([
+    'left_arm_fat_pct','right_arm_fat_pct',
+    'left_leg_fat_pct','right_leg_fat_pct',
+    'trunk_fat_pct',
+  ], e), '%');
+}
+
+// ── Table ──────────────────────────────────────────────────────────────────
+function fmt(v, decimals = 1) {
+  return v == null ? '—' : Number(v).toFixed(decimals);
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  if (!allEntries.length) {
+    tbody.innerHTML = `<tr><td colspan="12"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>`;
+    return;
+  }
+  // Sort descending by date for the table
+  const sorted = [...allEntries].sort((a, b) => b.date.localeCompare(a.date));
+  tbody.innerHTML = sorted.map(e => {
+    const isMe = e.user_id === me?.id;
+    return `<tr>
+      <td>${e.date}</td>
+      <td>
+        <span class="user-badge">${e.user_name}</span>
+        ${isMe ? '<span class="tag-you">you</span>' : ''}
+      </td>
+      <td>${fmt(e.weight_kg)} kg</td>
+      <td>${fmt(e.bmi)}</td>
+      <td>${fmt(e.body_fat_pct)}%</td>
+      <td>${fmt(e.body_water_pct)}%</td>
+      <td>${fmt(e.muscle_mass_kg)} kg</td>
+      <td>${fmt(e.bone_mass_kg, 2)} kg</td>
+      <td>${fmt(e.visceral_fat)}</td>
+      <td>${fmt(e.metabolic_age, 0)}</td>
+      <td>${fmt(e.bmr_kcal, 0)}</td>
+      <td>
+        <div class="td-actions">
+          ${isMe ? `
+            <button class="btn-sm btn-edit" onclick='openEditModal(${JSON.stringify(e)})'>Edit</button>
+            <button class="btn-sm btn-del" onclick="deleteEntry(${e.id})">Delete</button>
+          ` : ''}
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+// ── Start ──────────────────────────────────────────────────────────────────
+boot();
+</script>
+</body>
+</html>
