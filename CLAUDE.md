@@ -18,7 +18,7 @@
 | Database | SQLite via `better-sqlite3` |
 | Auth | `better-auth` with `genericOAuth` plugin (OIDC, Authelia) |
 | DB adapter | `@better-auth/kysely-adapter` + `kysely` with `SqliteDialect` |
-| Frontend | Single-page HTML (`public/index.html`) — no build step, no framework |
+| Frontend | Single-page HTML (`public/index.html`) with `public/app.css` and `public/app.js` — no build step, no framework |
 | Charts | Chart.js 4 + `chartjs-adapter-date-fns` + `chartjs-plugin-annotation` |
 | Config | `dotenv` via `.env` file |
 
@@ -36,7 +36,9 @@ corpus/
 │   ├── users.js           # Distinct user name listing
 │   └── profile.js         # User profile get/upsert
 ├── public/
-│   └── index.html         # Full SPA: form, charts, stats row, modals
+│   ├── index.html         # SPA markup and modal HTML
+│   ├── app.css            # All styles
+│   └── app.js             # All frontend logic
 ├── systemd/
 │   ├── corpus.service     # systemd unit (Debian/Ubuntu)
 │   └── corpus.openrc      # OpenRC init script (Alpine Linux)
@@ -148,7 +150,7 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 
 ## Frontend architecture
 
-Single file: `public/index.html`. No build step, no framework, no bundler. All logic is vanilla JS in a `<script>` block at the bottom.
+Three files: `public/index.html` (markup), `public/app.css` (styles), `public/app.js` (logic). No build step, no framework, no bundler. All logic is vanilla JS in `app.js`.
 
 ### Key state variables
 
@@ -226,7 +228,7 @@ The database is created automatically at `data/tracker.db` on first run. Delete 
 
 ## Conventions and constraints
 
-- **No build step.** The frontend is a single `public/index.html` file with inline CSS and JS. Do not introduce a bundler or framework without explicit instruction.
+- **No build step.** The frontend is `public/index.html` (markup), `public/app.css` (styles), and `public/app.js` (logic). Do not introduce a bundler or framework without explicit instruction.
 - **No ORM.** Database access uses `better-sqlite3` prepared statements directly in `db.js`. Do not introduce Prisma, Drizzle, or any ORM.
 - **ES modules only.** All files use `import`/`export`. `"type": "module"` is set in `package.json`.
 - **All metrics in SI units.** Weight and mass in kg, height in cm, percentages as plain numbers (e.g. `18.2` not `0.182`).
