@@ -56,7 +56,7 @@ identity_providers:
   oidc:
     clients:
       - client_id: corpus
-        client_secret: '<your-hashed-secret>'
+        client_secret: '<hashed-secret>'  # hash with: authelia crypto hash generate pbkdf2 --variant sha512
         redirect_uris:
           - https://corpus.yourdomain.com/api/auth/oauth2/callback/authelia
         scopes:
@@ -68,7 +68,12 @@ identity_providers:
         grant_types:
           - authorization_code
         pkce_challenge_method: S256
+        token_endpoint_auth_method: client_secret_post
 ```
+
+> **`token_endpoint_auth_method: client_secret_post` is required.** better-auth sends the client secret in the POST body, but Authelia defaults to `client_secret_basic` (Authorization header). Without this, the token exchange will fail with `oauth_code_verification_failed`.
+
+> **`AUTHELIA_ISSUER` must not have a trailing slash** in `.env`, e.g. `https://auth.yourdomain.com` not `https://auth.yourdomain.com/`.
 
 ### 4. Run
 
