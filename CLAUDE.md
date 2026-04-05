@@ -147,6 +147,8 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 - Unauthenticated browser requests are redirected to `GET /auth/login`, which serves a minimal HTML page that uses `fetch` to POST `{ providerId: 'authelia', callbackURL: '/' }` as JSON to `POST /api/auth/sign-in/oauth2`, then redirects the browser to the Authelia OIDC URL returned in the response
 - The `genericOAuth` plugin exposes `POST /api/auth/sign-in/oauth2` (initiate) and `GET /api/auth/oauth2/callback/authelia` (OIDC callback) — **not** `/api/auth/sign-in/social`, which is for built-in providers only (GitHub, Google, etc.)
 - The redirect URI registered in Authelia must be `{BASE_URL}/api/auth/oauth2/callback/authelia`
+- The Authelia client **must** set `token_endpoint_auth_method: 'client_secret_post'` — better-auth sends credentials in the POST body, but Authelia defaults to `client_secret_basic` (Authorization header), causing `oauth_code_verification_failed`
+- The Authelia client secret must be stored as a digest (e.g. `$pbkdf2-sha512$...`); use `authelia crypto hash generate pbkdf2 --variant sha512` to generate one from the plaintext secret in `.env`
 - Unauthenticated API requests return `401`
 - `AUTH_BYPASS=true` skips all of the above and injects: `{ userId: 'dev-user', user: { id: 'dev-user', name: 'Dev User', email: 'dev@localhost' } }`
 
