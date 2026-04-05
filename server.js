@@ -45,16 +45,33 @@ app.use(async (req, _res, next) => {
   next();
 });
 
+// ── Auth login page — auto-submits POST to genericOAuth sign-in endpoint ──
+app.get('/auth/login', (req, res) => {
+  res.setHeader('Content-Type', 'text/html');
+  res.send(`<!DOCTYPE html>
+<html>
+<head><title>Signing in…</title></head>
+<body>
+<form id="f" method="POST" action="/api/auth/sign-in/oauth2">
+  <input type="hidden" name="providerId" value="authelia">
+  <input type="hidden" name="callbackURL" value="/">
+</form>
+<script>document.getElementById('f').submit();</script>
+</body>
+</html>`);
+});
+
 // ── Auth guard — redirect to OIDC login for browser requests ──────────────
 app.use((req, res, next) => {
   if (AUTH_BYPASS) return next();
   if (req.path.startsWith('/api/auth')) return next();
+  if (req.path.startsWith('/auth/login')) return next();
 
   if (!req.session) {
     if (req.path.startsWith('/api/')) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-    return res.redirect('/api/auth/sign-in/social?providerId=authelia&callbackURL=/');
+    return res.redirect('/auth/login');
   }
   next();
 });
@@ -69,7 +86,7 @@ app.post('/api/logout', async (req, res) => {
   } catch {
     // best-effort — clear the session cookie regardless
   }
-  res.redirect('/api/auth/sign-in/social?providerId=authelia&callbackURL=/');
+  res.redirect('/auth/login');
 });
 
 // ── Static files ───────────────────────────────────────────────────────────
