@@ -45,18 +45,23 @@ app.use(async (req, _res, next) => {
   next();
 });
 
-// ── Auth login page — auto-submits POST to genericOAuth sign-in endpoint ──
+// ── Auth login page — POSTs JSON to genericOAuth sign-in endpoint ──────────
 app.get('/auth/login', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(`<!DOCTYPE html>
 <html>
 <head><title>Signing in…</title></head>
 <body>
-<form id="f" method="POST" action="/api/auth/sign-in/oauth2">
-  <input type="hidden" name="providerId" value="authelia">
-  <input type="hidden" name="callbackURL" value="/">
-</form>
-<script>document.getElementById('f').submit();</script>
+<script>
+fetch('/api/auth/sign-in/oauth2', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ providerId: 'authelia', callbackURL: '/' })
+})
+.then(r => r.json())
+.then(d => { if (d.url) window.location.href = d.url; })
+.catch(() => { document.body.textContent = 'Login failed. Please refresh.'; });
+</script>
 </body>
 </html>`);
 });
