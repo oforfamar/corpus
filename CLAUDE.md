@@ -70,7 +70,7 @@ Defined in `.env` (copy from `.env.example`):
 
 ## Database schema
 
-The app uses a single SQLite file at `data/tracker.db`. better-auth creates its own tables (`user`, `session`, `account`, `verification`) in the same file via its Kysely adapter.
+The app uses a single SQLite file at `data/tracker.db`. All tables — including the four better-auth tables (`user`, `session`, `account`, `verification`) — are created with `CREATE TABLE IF NOT EXISTS` in `db.js` on startup. better-auth does **not** auto-migrate; the schema must be maintained manually in `db.js`.
 
 ### `entries` table
 
@@ -126,6 +126,7 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `ALL` | `/api/auth/*` | — | Delegated to better-auth (OIDC sign-in, callback, sign-out) |
+| `GET` | `/auth/login` | — | Serves auto-login page; POSTs JSON to `/api/auth/sign-in/oauth2` via fetch, then redirects to Authelia |
 | `GET` | `/api/me` | Yes | Current user `{ id, name, email }` |
 | `GET` | `/api/entries` | Yes | All entries, optional `?user=<name>` filter, ordered by date ASC |
 | `POST` | `/api/entries` | Yes | Create entry; `user_id`/`user_name` from session, not body |
@@ -143,7 +144,9 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 - The OIDC provider is named `authelia` and uses discovery URL auto-detection (`/.well-known/openid-configuration`)
 - PKCE is enabled (`pkce: true`)
 - Session cookies are issued by better-auth; every request runs `auth.api.getSession()` to validate them
-- Unauthenticated browser requests are redirected to `/api/auth/sign-in/social?providerId=authelia&callbackURL=/`
+- Unauthenticated browser requests are redirected to `GET /auth/login`, which serves a minimal HTML page that uses `fetch` to POST `{ providerId: 'authelia', callbackURL: '/' }` as JSON to `POST /api/auth/sign-in/oauth2`, then redirects the browser to the Authelia OIDC URL returned in the response
+- The `genericOAuth` plugin exposes `POST /api/auth/sign-in/oauth2` (initiate) and `GET /api/auth/oauth2/callback/authelia` (OIDC callback) — **not** `/api/auth/sign-in/social`, which is for built-in providers only (GitHub, Google, etc.)
+- The redirect URI registered in Authelia must be `{BASE_URL}/api/auth/oauth2/callback/authelia`
 - Unauthenticated API requests return `401`
 - `AUTH_BYPASS=true` skips all of the above and injects: `{ userId: 'dev-user', user: { id: 'dev-user', name: 'Dev User', email: 'dev@localhost' } }`
 
