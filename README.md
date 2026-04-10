@@ -9,6 +9,7 @@ Self-hosted body composition tracker with OIDC authentication, built with Node.j
 - Interactive line charts per metric group, with multi-user coloured lines
 - Derived metrics dashboard: auto-BMI, ideal weight band, ACE body fat reference bands, metabolic age delta, Mifflin-St Jeor BMR comparison
 - Full measurement history table with edit and delete (own entries only)
+- CSV bulk import via the UI (duplicate dates are skipped automatically)
 - Multi-user support — each user's data is labelled and filterable
 - User profiles (date of birth, height, sex) stored once and used for all derivations
 - OIDC login via [Authelia](https://www.authelia.com/) (or any OIDC-compliant provider) using [better-auth](https://better-auth.com/)

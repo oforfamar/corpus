@@ -21,6 +21,7 @@
 | Frontend | Single-page HTML (`public/index.html`) with `public/app.css` and `public/app.js` — no build step, no framework |
 | Charts | Chart.js 4 + `chartjs-adapter-date-fns` + `chartjs-plugin-annotation` |
 | Config | `dotenv` via `.env` file |
+| File upload | `multer` (memory storage, CSV import) |
 
 ---
 
@@ -34,7 +35,8 @@ corpus/
 ├── routes/
 │   ├── entries.js         # CRUD for body measurement entries
 │   ├── users.js           # Distinct user name listing
-│   └── profile.js         # User profile get/upsert
+│   ├── profile.js         # User profile get/upsert
+│   └── import.js          # CSV bulk import
 ├── public/
 │   ├── index.html         # SPA markup and modal HTML
 │   ├── app.css            # All styles
@@ -135,6 +137,7 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 | `GET` | `/api/users` | Yes | Distinct user names that have at least one entry |
 | `GET` | `/api/profile` | Yes | Current user's profile row or `null` |
 | `PUT` | `/api/profile` | Yes | Upsert current user's profile |
+| `POST` | `/api/import` | Yes | Upload a CSV file (`multipart/form-data`, field `file`); inserts rows in a single transaction, skipping dates that already exist for the user; returns `{ imported, skipped, errors }` |
 
 ---
 
@@ -180,6 +183,9 @@ const charts = {};      // Chart.js instances keyed by canvas ID
 | `openProfileModal(mandatory)` | Opens profile modal; if `mandatory=true` the cancel button is disabled |
 | `submitProfile(e)` | PUTs to `/api/profile`, updates `myProfile`, re-renders stats and charts |
 | `openEditModal(entry)` | Populates and shows the edit modal |
+| `openImportModal()` | Opens the CSV import modal, clears previous result and file input |
+| `closeImportModal()` | Closes the CSV import modal |
+| `submitImport()` | POSTs selected CSV file to `/api/import`, renders `{ imported, skipped, errors }` summary, calls `loadData()` if any rows were imported |
 | `makeDatasetsMulti(fields, entries)` | Builds Chart.js datasets — one dataset per field when single-user view, one per user per field when all-users view |
 | `weightAnnotations()` | Returns chartjs-plugin-annotation config for ideal weight band (BMI 18.5–24.9) |
 | `fatAnnotations()` | Returns annotation config for ACE fitness (green) and acceptable (amber) body fat bands |

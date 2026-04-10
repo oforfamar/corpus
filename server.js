@@ -5,6 +5,7 @@ import { auth } from './auth.js';
 import entriesRouter from './routes/entries.js';
 import usersRouter from './routes/users.js';
 import profileRouter from './routes/profile.js';
+import importRouter from './routes/import.js';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -101,6 +102,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/api/entries', entriesRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/profile', profileRouter);
+app.use('/api/import', importRouter);
 
 // ── Current user info (used by the SPA) ───────────────────────────────────
 app.get('/api/me', (req, res) => {

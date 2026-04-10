@@ -664,4 +664,56 @@ function renderTable() {
 }
 
 // ── Start ──────────────────────────────────────────────────────────────────
+
+// ── CSV Import ─────────────────────────────────────────────────────────────
+function openImportModal() {
+  document.getElementById('importFile').value = '';
+  document.getElementById('importResult').innerHTML = '';
+  document.getElementById('importModal').classList.remove('hidden');
+}
+
+function closeImportModal() {
+  document.getElementById('importModal').classList.add('hidden');
+}
+
+async function submitImport() {
+  const fileInput = document.getElementById('importFile');
+  const resultEl = document.getElementById('importResult');
+
+  if (!fileInput.files.length) {
+    resultEl.innerHTML = '<span style="color:var(--danger)">Please select a CSV file.</span>';
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append('file', fileInput.files[0]);
+
+  resultEl.innerHTML = 'Importing…';
+
+  try {
+    const res = await fetch('/api/import', { method: 'POST', body: formData });
+    const data = await res.json();
+
+    if (!res.ok) {
+      resultEl.innerHTML = `<span style="color:var(--danger)">Error: ${data.error}</span>`;
+      return;
+    }
+
+    let html = `<span style="color:var(--success)">Imported ${data.imported} row${data.imported !== 1 ? 's' : ''}.</span>`;
+    if (data.skipped > 0) {
+      html += ` Skipped ${data.skipped} duplicate${data.skipped !== 1 ? 's' : ''}.`;
+    }
+    if (data.errors.length > 0) {
+      html += `<ul style="margin:.5rem 0 0;padding-left:1.2rem">` +
+        data.errors.map(e => `<li>Row ${e.row}: ${e.reason}</li>`).join('') +
+        `</ul>`;
+    }
+    resultEl.innerHTML = html;
+
+    if (data.imported > 0) loadData();
+  } catch (err) {
+    resultEl.innerHTML = `<span style="color:var(--danger)">Request failed: ${err.message}</span>`;
+  }
+}
+
 boot();

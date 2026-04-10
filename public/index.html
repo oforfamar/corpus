@@ -6,9 +6,9 @@
   <title>Corpus</title>
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="stylesheet" href="/app.css" />
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.0.1/dist/chartjs-plugin-annotation.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-annotation@3.1.0/dist/chartjs-plugin-annotation.min.js"></script>
 </head>
 <body>
 
@@ -33,6 +33,7 @@
       <option value="">All profiles</option>
     </select>
     <button class="btn btn-primary" onclick="toggleForm()">+ Add measurement</button>
+    <button class="btn btn-secondary" onclick="openImportModal()">Import CSV</button>
   </div>
 
   <!-- Stats row -->
@@ -129,6 +130,23 @@
   </div>
 
 </main>
+
+<!-- ── Import modal ── -->
+<div class="modal-overlay hidden" id="importModal">
+  <div class="modal" style="max-width:460px">
+    <div class="modal-title">Import CSV</div>
+    <div class="modal-subtitle">Select a CSV file with a header row. Rows whose date already exists in the database will be skipped.</div>
+    <div class="form-group" style="margin-top:1rem">
+      <label>CSV file *</label>
+      <input type="file" id="importFile" accept=".csv" />
+    </div>
+    <div id="importResult" style="margin-top:1rem;font-size:.875rem"></div>
+    <div class="modal-actions">
+      <button type="button" class="btn btn-secondary" onclick="closeImportModal()">Close</button>
+      <button type="button" class="btn btn-primary" onclick="submitImport()">Import</button>
+    </div>
+  </div>
+</div>
 
 <!-- ── Edit modal ── -->
 <div class="modal-overlay hidden" id="editModal">

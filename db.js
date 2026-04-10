@@ -194,6 +194,20 @@ export function getDistinctUsers() {
   return stmtDistinctUsers.all().map(r => r.user_name);
 }
 
+const stmtGetDatesForUser = db.prepare(`
+  SELECT date FROM entries WHERE user_id = ?
+`);
+
+export function getExistingDatesForUser(userId) {
+  return new Set(stmtGetDatesForUser.all(userId).map(r => r.date));
+}
+
+export const importEntries = db.transaction((rows) => {
+  for (const row of rows) {
+    stmtInsert.run(row);
+  }
+});
+
 // ── User profiles ──────────────────────────────────────────────────────────
 
 db.exec(`
