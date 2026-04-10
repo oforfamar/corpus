@@ -166,7 +166,10 @@ Three files: `public/index.html` (markup), `public/app.css` (styles), `public/ap
 ```js
 let me = null;          // { id, name, email } from /api/me
 let myProfile = null;   // user_profiles row for current user, or null
-let allEntries = [];    // all entries currently loaded (respects filter)
+let allEntries = [];    // all entries currently loaded (respects user filter)
+let chartRange = '6M';  // active chart time window: '1M' | '3M' | '6M' | '1Y' | 'All'
+let tablePage = 1;      // current history table page (1-indexed)
+const TABLE_PAGE_SIZE = 20;
 const charts = {};      // Chart.js instances keyed by canvas ID
 ```
 
@@ -175,10 +178,13 @@ const charts = {};      // Chart.js instances keyed by canvas ID
 | Function | Description |
 |---|---|
 | `boot()` | Fetches `/api/me` + `/api/profile` in parallel, sets header, auto-opens profile modal if incomplete, calls `loadData()` |
-| `loadData()` | Fetches entries (with filter), refreshes user filter dropdown, calls `renderStats()`, `renderCharts()`, `renderTable()` |
+| `loadData()` | Fetches entries (with filter), resets `tablePage` to 1, refreshes user filter dropdown, calls `renderStats()`, `renderCharts()`, `renderTable()` |
 | `renderStats()` | Builds the 5-card derived metrics row above charts (weight trend, BMI category, body fat ACE category, metabolic age delta, BMR vs Mifflin-St Jeor) |
-| `renderCharts()` | Creates or updates all 6 Chart.js instances; applies ideal weight band and ACE body fat bands as annotations |
-| `renderTable()` | Builds the history table sorted descending; shows Edit/Delete only for own rows |
+| `setChartRange(range)` | Updates `chartRange`, toggles `.active` on range buttons, calls `renderCharts()` |
+| `entriesForCharts()` | Returns `allEntries` filtered to the active `chartRange` window |
+| `renderCharts()` | Creates or updates all 6 Chart.js instances using `entriesForCharts()`; applies ideal weight band and ACE body fat bands as annotations |
+| `renderTable()` | Builds the paginated history table (descending); renders pagination controls; shows Edit/Delete only for own rows |
+| `goToPage(page)` | Sets `tablePage` and calls `renderTable()`, scrolling the table card into view |
 | `autoFillBmi(prefix)` | On weight input: computes BMI from stored `myProfile.height_cm` and fills the BMI field |
 | `openProfileModal(mandatory)` | Opens profile modal; if `mandatory=true` the cancel button is disabled |
 | `submitProfile(e)` | PUTs to `/api/profile`, updates `myProfile`, re-renders stats and charts |

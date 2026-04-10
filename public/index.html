@@ -93,6 +93,16 @@
   </div>
 
   <!-- Charts -->
+  <div class="chart-controls">
+    <span class="chart-range-label">Range:</span>
+    <div class="chart-range-btns">
+      <button class="btn-range" data-range="1M" onclick="setChartRange('1M')">1M</button>
+      <button class="btn-range" data-range="3M" onclick="setChartRange('3M')">3M</button>
+      <button class="btn-range active" data-range="6M" onclick="setChartRange('6M')">6M</button>
+      <button class="btn-range" data-range="1Y" onclick="setChartRange('1Y')">1Y</button>
+      <button class="btn-range" data-range="All" onclick="setChartRange('All')">All</button>
+    </div>
+  </div>
   <div class="charts-grid" id="chartsGrid">
     <div class="chart-card">
       <h3>Weight &amp; BMI</h3>
@@ -127,6 +137,7 @@
         </tbody>
       </table>
     </div>
+    <div class="pagination" id="pagination"></div>
   </div>
 
 </main>

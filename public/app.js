@@ -4,6 +4,10 @@ let myProfile = null;       // current user's profile (or null)
 let allEntries = [];
 const charts = {};
 
+let chartRange = '6M';         // active chart time window
+let tablePage = 1;             // current table page (1-indexed)
+const TABLE_PAGE_SIZE = 20;
+
 // Colour palette per user
 const PALETTE = ['#6c8ef5','#f56ca8','#4cbb8a','#f5a623','#a78bfa','#38bdf8','#fb923c','#e879f9'];
 const userColors = {};
@@ -42,6 +46,7 @@ async function loadData() {
   const url = filter ? `/api/entries?user=${encodeURIComponent(filter)}` : '/api/entries';
   const r = await fetch(url);
   allEntries = await r.json();
+  tablePage = 1;
   await refreshUserFilter();
   renderStats();
   renderCharts();
@@ -596,8 +601,25 @@ function renderLegend(containerId, items) {
   ).join('');
 }
 
+// ── Chart range filter ─────────────────────────────────────────────────────
+function setChartRange(range) {
+  chartRange = range;
+  document.querySelectorAll('.btn-range').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.range === range);
+  });
+  renderCharts();
+}
+
+function entriesForCharts() {
+  if (chartRange === 'All') return allEntries;
+  const now = new Date();
+  const months = chartRange === '1M' ? 1 : chartRange === '3M' ? 3 : chartRange === '6M' ? 6 : 12;
+  const cutoff = new Date(now.getFullYear(), now.getMonth() - months, now.getDate()).toISOString().split('T')[0];
+  return allEntries.filter(e => e.date >= cutoff);
+}
+
 function renderCharts() {
-  const e = allEntries;
+  const e = entriesForCharts();
 
   // Weight chart with ideal band annotation
   const wAnnotations = weightAnnotations();
@@ -635,12 +657,22 @@ function fmt(v, decimals = 1) { return v == null ? '—' : Number(v).toFixed(dec
 
 function renderTable() {
   const tbody = document.getElementById('tableBody');
+  const paginationEl = document.getElementById('pagination');
+
   if (!allEntries.length) {
     tbody.innerHTML = `<tr><td colspan="13"><div class="empty-state">No data yet. Add your first measurement above.</div></td></tr>`;
+    paginationEl.innerHTML = '';
     return;
   }
+
   const sorted = [...allEntries].sort((a, b) => b.date.localeCompare(a.date));
-  tbody.innerHTML = sorted.map(e => {
+  const totalPages = Math.ceil(sorted.length / TABLE_PAGE_SIZE);
+  tablePage = Math.min(tablePage, totalPages);
+
+  const start = (tablePage - 1) * TABLE_PAGE_SIZE;
+  const page = sorted.slice(start, start + TABLE_PAGE_SIZE);
+
+  tbody.innerHTML = page.map(e => {
     const isMe = e.user_id === me?.id;
     return `<tr>
       <td>${e.date}</td>
@@ -661,6 +693,23 @@ function renderTable() {
       </div></td>
     </tr>`;
   }).join('');
+
+  // Pagination controls
+  if (totalPages <= 1) {
+    paginationEl.innerHTML = '';
+    return;
+  }
+  paginationEl.innerHTML = `
+    <button class="btn-page" onclick="goToPage(${tablePage - 1})" ${tablePage === 1 ? 'disabled' : ''}>&lsaquo; Prev</button>
+    <span class="page-info">Page ${tablePage} of ${totalPages}</span>
+    <button class="btn-page" onclick="goToPage(${tablePage + 1})" ${tablePage === totalPages ? 'disabled' : ''}>Next &rsaquo;</button>
+  `;
+}
+
+function goToPage(page) {
+  tablePage = page;
+  renderTable();
+  document.querySelector('.card:last-of-type').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 // ── Start ──────────────────────────────────────────────────────────────────
