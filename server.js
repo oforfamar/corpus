@@ -38,7 +38,7 @@ app.use(async (req, _res, next) => {
   }
   try {
     const session = await auth.api.getSession({ headers: req.headers });
-    req.session = session ?? null;
+    req.session = session ? { userId: session.user.id, user: session.user } : null;
   } catch {
     req.session = null;
   }
