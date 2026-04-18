@@ -50,18 +50,90 @@ app.use(async (req, _res, next) => {
 app.get('/auth/login', (req, res) => {
   res.setHeader('Content-Type', 'text/html');
   res.send(`<!DOCTYPE html>
-<html>
-<head><title>Signing in…</title></head>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Signing in… — Corpus</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #0f1117; --surface: #1a1d27; --border: #2e3148;
+    --accent: #6c8ef5; --text: #e2e5f0; --muted: #7b82a0; --danger: #e05c6e;
+  }
+  body {
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 0%, #1a1d27 0%, var(--bg) 60%);
+    color: var(--text); min-height: 100vh;
+    display: flex; align-items: center; justify-content: center; padding: 1.5rem;
+  }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    padding: 2.5rem 2rem; max-width: 380px; width: 100%; text-align: center;
+  }
+  .logo {
+    font-size: 1.1rem; font-weight: 700; letter-spacing: .15em;
+    color: var(--accent); margin-bottom: 1.75rem;
+  }
+  .spinner {
+    width: 40px; height: 40px; margin: 0 auto 1.25rem;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin .8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .title { font-size: 1.05rem; font-weight: 600; margin-bottom: .4rem; }
+  .subtitle { font-size: .85rem; color: var(--muted); }
+  .icon-error {
+    width: 48px; height: 48px; margin: 0 auto 1rem;
+    border-radius: 50%; background: rgba(224,92,110,.12);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--danger); font-size: 1.5rem; font-weight: 700;
+  }
+  .btn {
+    margin-top: 1.5rem; background: var(--accent); color: #fff;
+    border: none; padding: .6rem 1.4rem; border-radius: 7px;
+    font-size: .9rem; font-weight: 500; cursor: pointer;
+    transition: filter .15s; font-family: inherit;
+  }
+  .btn:hover { filter: brightness(1.1); }
+  .hidden { display: none; }
+  .detail { font-size: .75rem; color: var(--muted); margin-top: .75rem; word-break: break-word; }
+</style>
+</head>
 <body>
+  <div class="card">
+    <div class="logo">CORPUS</div>
+    <div id="loading">
+      <div class="spinner"></div>
+      <div class="title">Signing you in…</div>
+      <div class="subtitle">Redirecting to your identity provider</div>
+    </div>
+    <div id="error" class="hidden">
+      <div class="icon-error">!</div>
+      <div class="title">Sign-in failed</div>
+      <div class="subtitle">We couldn't reach the authentication server.</div>
+      <div id="detail" class="detail"></div>
+      <button class="btn" onclick="location.reload()">Try again</button>
+    </div>
+  </div>
 <script>
-fetch('/api/auth/sign-in/oauth2', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({ providerId: 'authelia', callbackURL: '/' })
-})
-.then(r => r.json())
-.then(d => { if (d.url) window.location.href = d.url; })
-.catch(() => { document.body.textContent = 'Login failed. Please refresh.'; });
+  function showError(msg) {
+    document.getElementById('loading').classList.add('hidden');
+    document.getElementById('error').classList.remove('hidden');
+    if (msg) document.getElementById('detail').textContent = msg;
+  }
+  fetch('/api/auth/sign-in/oauth2', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ providerId: 'authelia', callbackURL: '/' })
+  })
+  .then(r => r.json().then(d => ({ ok: r.ok, d })))
+  .then(({ ok, d }) => {
+    if (d && d.url) { window.location.href = d.url; return; }
+    showError(ok ? 'No redirect URL returned.' : (d && d.message) || 'Authentication request failed.');
+  })
+  .catch(err => showError(err && err.message ? err.message : ''));
 </script>
 </body>
 </html>`);
