@@ -128,7 +128,7 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 | Method | Path | Auth | Description |
 |---|---|---|---|
 | `ALL` | `/api/auth/*` | — | Delegated to better-auth (OIDC sign-in, callback, sign-out) |
-| `GET` | `/auth/login` | — | Serves auto-login page; POSTs JSON to `/api/auth/sign-in/oauth2` via fetch, then redirects to Authelia |
+| `GET` | `/auth/login` | — | Serves auto-login page; POSTs JSON to `/api/auth/sign-in/social` via fetch, then redirects to Authelia |
 | `GET` | `/api/me` | Yes | Current user `{ id, name, email }` |
 | `GET` | `/api/entries` | Yes | All entries, optional `?user=<name>` filter, ordered by date ASC |
 | `POST` | `/api/entries` | Yes | Create entry; `user_id`/`user_name` from session, not body |
@@ -147,9 +147,9 @@ All routes except `/api/auth/*` require an active session. In `AUTH_BYPASS=true`
 - The OIDC provider is named `authelia` and uses discovery URL auto-detection (`/.well-known/openid-configuration`)
 - PKCE is enabled (`pkce: true`)
 - Session cookies are issued by better-auth; every request runs `auth.api.getSession()` to validate them
-- Unauthenticated browser requests are redirected to `GET /auth/login`, which serves a minimal HTML page that uses `fetch` to POST `{ providerId: 'authelia', callbackURL: '/' }` as JSON to `POST /api/auth/sign-in/oauth2`, then redirects the browser to the Authelia OIDC URL returned in the response
-- The `genericOAuth` plugin exposes `POST /api/auth/sign-in/oauth2` (initiate) and `GET /api/auth/oauth2/callback/authelia` (OIDC callback) — **not** `/api/auth/sign-in/social`, which is for built-in providers only (GitHub, Google, etc.)
-- The redirect URI registered in Authelia must be `{BASE_URL}/api/auth/oauth2/callback/authelia`
+- Unauthenticated browser requests are redirected to `GET /auth/login`, which serves a minimal HTML page that uses `fetch` to POST `{ provider: 'authelia', callbackURL: '/' }` as JSON to `POST /api/auth/sign-in/social`, then redirects the browser to the Authelia OIDC URL returned in the response
+- The `genericOAuth` plugin registers configured providers as standard social providers. It uses `POST /api/auth/sign-in/social` (with `provider: 'authelia'`) to initiate sign-in and `GET /api/auth/callback/authelia` for the OIDC callback.
+- The redirect URI registered in Authelia must be `{BASE_URL}/api/auth/callback/authelia`
 - The Authelia client **must** set `token_endpoint_auth_method: 'client_secret_post'` — better-auth sends credentials in the POST body, but Authelia defaults to `client_secret_basic` (Authorization header), causing `oauth_code_verification_failed`
 - The Authelia client secret must be stored as a digest (e.g. `$pbkdf2-sha512$...`); use `authelia crypto hash generate pbkdf2 --variant sha512` to generate one from the plaintext secret in `.env`
 - Unauthenticated API requests return `401`

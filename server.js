@@ -123,10 +123,10 @@ app.get('/auth/login', (req, res) => {
     document.getElementById('error').classList.remove('hidden');
     if (msg) document.getElementById('detail').textContent = msg;
   }
-  fetch('/api/auth/sign-in/oauth2', {
+  fetch('/api/auth/sign-in/social', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ providerId: 'authelia', callbackURL: '/' })
+    body: JSON.stringify({ provider: 'authelia', callbackURL: '/' })
   })
   .then(r => r.json().then(d => ({ ok: r.ok, d })))
   .then(({ ok, d }) => {
